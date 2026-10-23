@@ -1,0 +1,513 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Secure Device Access Module 4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Concept: a field manual for a network defender. Cool slate ground, deep teal ink, one signal-orange for threats. */
+:root{
+  --bg:#eef3f6; --surface:#ffffff; --surface2:#e3ebf0; --fg:#0d2230; --muted:#4d6676; --line:#cbd8e0;
+  --accent:#0b6f8c; --accent-soft:#d3ecf4; --threat:#c2410c; --threat-soft:#fde4d6; --ok:#1b7f55; --ok-soft:#d6f0e3;
+  --font-d:'Archivo','Helvetica Neue',Arial,sans-serif; --font-b:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif; --font-m:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#09151e; --surface:#10212d; --surface2:#17303f; --fg:#e3eef4; --muted:#93acba; --line:#24404f;
+  --accent:#5cc3e0; --accent-soft:#12394a; --threat:#ff935c; --threat-soft:#3d2216; --ok:#55d394; --ok-soft:#12372a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#09151e; --surface:#10212d; --surface2:#17303f; --fg:#e3eef4; --muted:#93acba; --line:#24404f;
+  --accent:#5cc3e0; --accent-soft:#12394a; --threat:#ff935c; --threat-soft:#3d2216; --ok:#55d394; --ok-soft:#12372a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+h1,h2,h3{font-family:var(--font-d);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;font-stretch:90%}
+h3{font-size:1.15rem;font-weight:650}
+p{margin:0 0 .8em}
+code,.mono{font-family:var(--font-m);font-size:.88em}
+.wrap{max-width:1000px;margin:0 auto}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.topbar .in{max-width:1000px;margin:0 auto;display:flex;gap:8px;align-items:center;padding:8px 16px;overflow-x:auto;scrollbar-width:none}
+.topbar a{white-space:nowrap;font:500 .78rem var(--font-m);color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px}
+.topbar a:hover,.topbar a.on{background:var(--accent-soft);color:var(--accent)}
+.prog{height:3px;background:var(--accent);width:0;transition:width .15s}
+.hero{padding:44px 0 28px}
+.eyebrow{font:500 .78rem var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.hero h1{font-size:clamp(2.2rem,7vw,4.2rem);font-weight:800;font-stretch:85%;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:1.1rem;color:var(--muted);max-width:60ch;margin-top:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:26px}
+.toc a{display:block;text-decoration:none;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.toc a:hover{border-color:var(--accent)}
+.toc b{display:block;font:500 .72rem var(--font-m);color:var(--accent);letter-spacing:.08em}
+.toc span{font-weight:600;font-size:.95rem}
+section{padding:46px 0 10px;scroll-margin-top:60px}
+.sec-tag{font:500 .75rem var(--font-m);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 14px;border-radius:0 8px 8px 0;margin:16px 0}
+.note.warn{border-color:var(--threat);background:var(--threat-soft)}
+.note b:first-child{display:block;font:500 .72rem var(--font-m);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.retain{background:var(--surface2);border-radius:12px;padding:16px 18px;margin-top:22px}
+.retain h3{font-size:.8rem;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.retain ul{margin:0;padding-left:1.1em}.retain li{margin:3px 0}
+.btn,.tab{font:500 .85rem var(--font-b);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:hover,.tab:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .72rem var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+.chip{display:inline-block;font:500 .78rem var(--font-m);background:var(--surface2);border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0}
+.chip.t{background:var(--threat-soft);color:var(--threat)}.chip.a{background:var(--accent-soft);color:var(--accent)}.chip.o{background:var(--ok-soft);color:var(--ok)}
+svg text{font-family:var(--font-m);fill:var(--fg)}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px}
+.shot{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.fade{opacity:1;transform:none}
+.js .fade{transform:translateY(12px);transition:transform .5s}
+.js .fade.in{transform:none}
+@media (prefers-reduced-motion:reduce){.js .fade{opacity:1;transform:none;transition:none}*{animation:none!important}}
+footer{padding:50px 0 60px;color:var(--muted);font-size:.85rem}
+</style>
+<style>
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:.9rem;color:var(--muted)}
+.steps4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:22px}
+.steps4 div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.9rem}
+.steps4 b{display:block;font:500 .72rem var(--font-m);letter-spacing:.08em;color:var(--accent);margin-bottom:2px}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 14px}
+.panel{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.panel>*,.pbody,.diagram{min-width:0;max-width:100%}.diagram svg{max-width:100%;height:auto}.phead h3{overflow-wrap:anywhere}
+.phead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.phead h3{font-size:1.4rem}
+.blk-t{font:500 .72rem var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+dl.terms{margin:0;display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:6px 14px;font-size:.92rem}
+dl.terms dt{font-weight:600;color:var(--accent)}dl.terms dd{margin:0}
+@media (max-width:520px){dl.terms{grid-template-columns:1fr}dl.terms dd{margin-bottom:6px}}
+.case{border:1px solid var(--line);border-left:4px solid var(--threat);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 16px}
+.case.sc{border-left-color:var(--accent)}
+.case h4{margin:6px 0 6px;font-family:var(--font-d);font-size:1.05rem}
+.case .lesson{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:.92rem;color:var(--muted)}
+.case .src{font-size:.8rem;color:var(--muted);margin-top:6px}
+.def ul{margin:0;padding-left:1.1em}.def li{margin:4px 0}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stepcard{margin-top:10px;min-height:92px}
+.btn:disabled{opacity:.45;cursor:default}
+#nodes .nd rect,#nodes .nd ellipse{fill:var(--surface2);stroke:var(--line);stroke-width:2;transition:fill .3s,stroke .3s}
+.nd text{font-size:11px;pointer-events:none}
+#nodes .nd.t-a rect{fill:var(--threat-soft);stroke:var(--threat)}
+#nodes .nd.t-v rect{stroke:var(--accent)}
+#nodes .nd.t-c ellipse{stroke-dasharray:5 4;stroke:var(--accent)}
+#nodes .nd.hit rect,#nodes .nd.hit ellipse{fill:var(--threat-soft);stroke:var(--threat)}
+#nodes .nd.ok rect{fill:var(--ok-soft);stroke:var(--ok)}
+.lk{stroke:var(--line);stroke-width:2}
+.lk.on{stroke:var(--threat);stroke-dasharray:6 5;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-22}}
+.pk-l{font-size:10px;fill:var(--threat)!important;font-weight:600}
+.tl{display:grid;gap:8px;margin-top:12px}
+.tl button{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--fg);font:inherit;cursor:pointer}
+.tl button:hover{border-color:var(--accent)}
+.tl .yr{font:500 1rem var(--font-m);color:var(--threat)}
+.tl .nm{font-weight:600;font-size:.95rem}.tl .nm small{display:block;font-weight:400;color:var(--muted)}
+@media (max-width:520px){.tl button{grid-template-columns:52px 1fr}.tl .chip{display:none}}
+.risk4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.cl label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:.93rem}
+.cl input{margin-top:5px}
+.meter{height:10px;border-radius:6px;background:var(--surface2);overflow:hidden;margin:8px 0}.meter i{display:block;height:100%;background:var(--threat);width:0;transition:width .3s}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.tools .card{padding:12px 14px;font-size:.9rem}.tools b{color:var(--accent)}
+.panel .diagram svg{min-width:520px}@media (min-width:600px){.hint{display:none}}.hint{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+</style>
+<style>
+.cli{background:#0f1b22;color:#d6e6ea;border-radius:10px;padding:12px 14px;font:400 .82rem/1.55 var(--font-m);overflow-x:auto;white-space:pre;margin:10px 0}
+.cli .c{color:#7fa3ad}
+code{font:500 .85em var(--font-m);background:var(--surface2);padding:1px 5px;border-radius:4px}
+.cli code{background:none;padding:0}
+</style>
+<div class="wrap">
+<nav class="topbar" aria-label="Sommaire"><div class="in"><a href="#a1">Routeur de bordure</a><a href="#a2">Mots de passe</a><a href="#a3">Connexions</a><a href="#a4">Simulateur</a><a href="#a5">SSH</a><a href="#a6">Commandes</a><a href="#a7">Quiz</a><a href="#a8">Glossaire</a></div><div class="prog" id="prog"></div></nav>
+<header class="hero"><div class="eyebrow">Cisco Networking Security · Module 4</div>
+<h1>Secure Device <em>Access</em></h1>
+<p class="lead">Comment sécuriser l’accès d’administration aux routeurs et switchs : routeur de bordure, mots de passe, protection des connexions et SSH. Ce module est pratique : les commandes IOS sont montrées avec leur effet, des schémas animés, et un simulateur de blocage de connexion.</p>
+<div class="legend"><span class="chip t">Cas réel</span><span>événement documenté publiquement</span><span class="chip a">Scénario type</span><span>exemple pédagogique</span></div>
+<div class="steps4"><div><b>4.1 · BORDURE</b>Routeur de bordure, accès admin</div><div><b>4.2 · MOTS DE PASSE</b>Forts, chiffrés, types 5/8/9</div><div><b>4.3 · CONNEXIONS</b>Login block-for, journalisation</div><div><b>4.4 · SSH</b>6 étapes, vérification</div></div>
+</header>
+<section id="a1"><div class="fade"><div class="sec-tag">4.1 · Sécuriser le routeur de bordure</div><h2>Sécuriser le routeur de bordure</h2><p class="lead">Pourquoi les routeurs sont une cible, et comment les protéger.</p><div id="s-edge"></div></div></section>
+<section id="a2"><div class="fade"><div class="sec-tag">4.2 · Accès administratif</div><h2>Mots de passe sur Cisco IOS</h2><p class="lead">Configurer, chiffrer et durcir les mots de passe.</p><div id="s-pass"></div></div></section>
+<section id="a3"><div class="fade"><div class="sec-tag">4.3 · Connexions virtuelles</div><h2>Renforcer les connexions virtuelles</h2><p class="lead">Ralentir la force brute et tracer les tentatives.</p><div id="s-login"></div></div></section>
+<section id="a4"><div class="fade"><div class="sec-tag">Simulateur</div><h2>Simulateur « login block-for »</h2><p class="lead">Cliquez sur « Tentative échouée » trois fois : le routeur passe en mode silencieux, même pour un bon mot de passe.</p><div id="sim"></div></div></section>
+<section id="a5"><div class="fade"><div class="sec-tag">4.4 · SSH</div><h2>Configurer SSH</h2><p class="lead">Remplacer Telnet par un accès chiffré.</p><div id="s-ssh"></div></div></section>
+<section id="a6"><div class="fade"><div class="sec-tag">Révision</div><h2>Aide-mémoire des commandes</h2><p class="lead">Les commandes du module et leur rôle.</p><div class="tbl"><table><thead><tr><th>Commande</th><th>Rôle</th></tr></thead><tbody id="ch"></tbody></table></div><p class="note"><b>Travaux pratiques</b>Le cours propose deux labs et une activité Packet Tracer : mots de passe chiffrés, durcissement de connexion et serveur SSH sur routeur et switch.</p></div></section>
+<section id="a7"><div class="fade"><div class="sec-tag">Révision</div><h2>Quiz</h2><p class="lead">Dix questions.</p><div class="card" id="quiz"></div></div></section>
+<section id="a8"><div class="fade"><div class="sec-tag">Révision</div><h2>Glossaire</h2><p class="lead">Termes techniques de la page.</p><input id="gq" type="search" placeholder="Filtrer (ex. VTY, DMZ, RSA)" aria-label="Filtrer le glossaire" style="width:100%;max-width:420px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit"><div class="tbl" style="margin-top:10px"><table><thead><tr><th>Terme</th><th>Définition</th></tr></thead><tbody id="gl"></tbody></table></div></div></section>
+<footer>Module 4 · Cisco Networking Security v1.0 · notes de cours en français. Compléments hors cours signalés « complément ». Les exemples de commandes utilisent des valeurs fictives.</footer>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.documentElement.classList.add('js');
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const gx=c=>75+c*122,gy=r=>50+r*100;
+const REG=[];      // every attack, for glossary and timeline
+const SECS={};     // section id -> items
+
+
+/* ---------- animated flow ----------
+ f.n : nodes   [id,label,type,col,row]   type: a attacker, v victim, u user, s server, c cloud, d device, x neutral
+ f.s : steps   [text, from, to, packetLabel, "ids that turn red/green"]   (from/to may be '' for a pure highlight)
+ label prefix "ok:" in hit list turns a node green */
+function flow(host,f){
+  if(host.__stop)host.__stop();
+  host.innerHTML='<div class="diagram"><svg viewBox="0 0 760 300" role="img" aria-label="Schéma animé"><g id="links"></g><g id="nodes"></g><g id="pk"></g></svg></div><p class="hint">Faites glisser le schéma latéralement si besoin.</p><div class="card stepcard"></div><div class="ctrls"><button class="btn" data-a="prev">← Précédent</button><button class="btn primary" data-a="next">Suivant →</button><button class="btn" data-a="play">▶ Lecture auto</button><button class="btn" data-a="reset">↺ Recommencer</button></div>';
+  const svg=$('svg',host),L=$('#links',host),N=$('#nodes',host),P=$('#pk',host),card=$('.stepcard',host);
+  const pos={},els={},links={};
+  f.n.forEach(n=>{pos[n[0]]=[gx(n[3]),gy(n[4])]});
+  f.s.forEach(s=>{if(s[1]&&s[2]&&s[1]!==s[2]){const k=[s[1],s[2]].sort().join('|');if(!links[k]){const a=pos[s[1]],b=pos[s[2]];links[k]=mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'lk'},L)}}});
+  f.n.forEach(n=>{
+    const [id,label,type,c,r]=n,x=gx(c),y=gy(r);
+    const g=mk('g',{class:'nd t-'+type},N);
+    if(type==='c')mk('ellipse',{cx:x,cy:y,rx:58,ry:27},g);else mk('rect',{x:x-58,y:y-26,width:116,height:52,rx:9},g);
+    const ls=label.split('|');
+    ls.forEach((t,i)=>{const e=mk('text',{x:x,y:y+4+(i-(ls.length-1)/2)*13,'text-anchor':'middle'},g);e.textContent=t});
+    els[id]=g;
+  });
+  const dot=mk('circle',{r:7,cx:0,cy:0,fill:'var(--threat)',opacity:0},P);
+  const lab=mk('text',{x:0,y:0,'text-anchor':'middle',class:'pk-l'},P);
+  let i=0,raf=0,tm=null,playing=false;
+  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  function move(a,b,label,done){
+    cancelAnimationFrame(raf);
+    if(!a||!b||a===b){dot.setAttribute('opacity',0);lab.textContent='';done&&done();return}
+    const A=pos[a],B=pos[b];dot.setAttribute('opacity',1);lab.textContent=label||'';
+    const put=(x,y)=>{dot.setAttribute('cx',x);dot.setAttribute('cy',y);lab.setAttribute('x',x);lab.setAttribute('y',y-14)};
+    if(reduce){put(B[0],B[1]);done&&done();return}
+    const t0=performance.now(),D=900;
+    (function f(ts){const k=Math.min(1,(ts-t0)/D),e=ease(k);put(A[0]+(B[0]-A[0])*e,A[1]+(B[1]-A[1])*e);if(k<1)raf=requestAnimationFrame(f);else done&&done()})(t0);
+  }
+  function show(k,animate){
+    i=Math.max(0,Math.min(f.s.length-1,k));
+    Object.values(els).forEach(g=>g.classList.remove('hit','ok'));
+    Object.values(links).forEach(l=>l.classList.remove('on'));
+    for(let j=0;j<=i;j++){const h=f.s[j][4];if(h)h.split(' ').forEach(id=>{if(id.startsWith('ok:')){const g=els[id.slice(3)];if(g){g.classList.remove('hit');g.classList.add('ok')}}else if(els[id]&&!els[id].classList.contains('ok'))els[id].classList.add('hit')})}
+    const s=f.s[i];
+    if(s[1]&&s[2]&&s[1]!==s[2]){const l=links[[s[1],s[2]].sort().join('|')];if(l)l.classList.add('on')}
+    card.innerHTML='<div class="mono" style="color:var(--threat);margin-bottom:4px">ÉTAPE '+(i+1)+' / '+f.s.length+'</div><p style="margin:0">'+s[0]+'</p>';
+    $('[data-a=prev]',host).disabled=i===0;$('[data-a=next]',host).disabled=i===f.s.length-1;
+    move(s[1],s[2],s[3]);
+  }
+  function stop(){playing=false;clearTimeout(tm);$('[data-a=play]',host).textContent='▶ Lecture auto'}
+  function tick(){if(!playing)return;if(i>=f.s.length-1){stop();return}show(i+1);tm=setTimeout(tick,3200)}
+  host.onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
+    if(a==='prev'){stop();show(i-1)}else if(a==='next'){stop();show(i+1)}else if(a==='reset'){stop();show(0)}
+    else if(a==='play'){if(playing){stop();return}if(i>=f.s.length-1)show(0);playing=true;b.textContent='⏸ Pause';tm=setTimeout(tick,3200)}};
+  host.__stop=()=>{stop();cancelAnimationFrame(raf);host.__stop=null};
+  show(0);
+}
+
+/* ---------- attack panel ---------- */
+function panel(host,a){
+  const cs=(a.cases||[]).map(c=>'<div class="case'+(c.real?'':' sc')+'"><span class="chip '+(c.real?'t':'a')+'">'+(c.real?'Cas réel':'Scénario type')+(c.when?' · '+c.when:'')+'</span><h4>'+c.title+'</h4><p style="margin:0">'+c.body+'</p>'+(c.lesson?'<div class="lesson"><b>À retenir :</b> '+c.lesson+'</div>':'')+(c.src?'<div class="src">'+c.src+'</div>':'')+'</div>').join('');
+  const tm=(a.terms&&a.terms.length)?'<div class="card"><p class="blk-t">Termes techniques</p><dl class="terms">'+a.terms.map(t=>'<dt>'+t[0]+'</dt><dd>'+t[1]+'</dd>').join('')+'</dl></div>':'';
+  const df=(a.defense&&a.defense.length)?'<div class="card def"><p class="blk-t">Comment s’en protéger</p><ul>'+a.defense.map(d=>'<li>'+d+'</li>').join('')+'</ul></div>':'';
+  const lk=a.link?'<div><button class="btn primary" data-goto="'+a.link+'">Voir la fiche détaillée →</button></div>':'';
+  host.innerHTML='<div class="panel"><div class="phead"><h3>'+a.name+'</h3>'+(a.tag?'<span class="chip">'+a.tag+'</span>':'')+'</div>'
+   +'<div class="card"><p class="blk-t">Définition</p><div>'+a.def+'</div></div>'+tm
+   +(a.flow?'<div><p class="blk-t">Schéma animé</p><div id="fl"></div></div>':'')
+   +lk+(cs?'<div><p class="blk-t">Exemples</p><div style="display:grid;gap:12px">'+cs+'</div></div>':'')+df+'</div>';
+  if(a.flow)flow($('#fl',host),a.flow);
+}
+
+/* ---------- sections: tabs + lazy render ---------- */
+function section(id,items){
+  SECS[id]=items;items.forEach(a=>{a.sec=id;REG.push(a)});
+  const root=$('#'+id);if(!root)return;
+  root.innerHTML='<div class="ptabs" role="tablist"></div><div class="pbody"></div>';
+  const tabs=$('.ptabs',root),body=$('.pbody',root);
+  items.forEach((a,k)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.textContent=a.short||a.name;b.dataset.k=a.id;b.onclick=()=>pick(a.id,false);tabs.appendChild(b)});
+  let cur=null,rendered=false;
+  function pick(aid,scroll){
+    const a=items.find(x=>x.id===aid)||items[0];cur=a.id;rendered=true;
+    $$('.tab',tabs).forEach(t=>t.setAttribute('aria-selected',t.dataset.k===a.id));
+    panel(body,a);
+    if(scroll)root.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  }
+  root.__pick=pick;
+  const first=()=>{if(!rendered)pick(items[0].id,false)};
+  if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){first();io.disconnect()}},{rootMargin:'200px'});io.observe(root)}else first();
+}
+function goto(aid){const a=REG.find(x=>x.id===aid);if(!a)return;const r=$('#'+a.sec);if(r&&r.__pick)r.__pick(aid,true)}
+
+/* ===== 4.1 Sécuriser le routeur de bordure ===== */
+section('s-edge',[
+{id:'infra',name:'Pourquoi protéger l’infrastructure',short:'Routeur de bordure',tag:'4.1',
+ def:`<p>L’<b>infrastructure réseau</b> (routeurs, switchs, serveurs, terminaux) est critique. Les routeurs sont une <b>cible principale</b> parce qu’ils dirigent le trafic entrant, sortant et entre les réseaux.</p><p>Le <b>routeur de bordure (edge router)</b> est le dernier routeur entre le réseau interne et un réseau non fiable comme Internet. Tout le trafic Internet de l’organisation y passe : c’est souvent la <b>première et la dernière ligne de défense</b>.</p>`,
+ terms:[['Routeur de bordure (edge router)','Dernier routeur avant Internet.'],['Réseau de confiance (trusted)','Réseau interne que l’on contrôle.'],['Réseau non fiable (untrusted)','Réseau que l’on ne contrôle pas (Internet).']],
+ flow:{n:[['in','Réseau interne|(de confiance)','u',0,1],['rt','Routeur|de bordure','s',2,1],['it','Internet|(non fiable)','c',4,1],['at','Attaquant','a',5,2]],
+  s:[[`Tout le trafic entre l’interne et Internet passe par le routeur de bordure.`,'in','rt','trafic sortant','rt'],
+   [`Il sert de première et dernière ligne de défense.`,'rt','it','trafic filtré','' ],
+   [`Un attaquant d’Internet cherche à le prendre pour cible : s’il le contrôle, il contrôle le trafic.`,'at','rt','attaque','at'],
+   [`D’où la nécessité de le sécuriser lui-même : accès administratif, système, physique.`,'','','','ok:rt']]},
+ cases:[{real:true,year:2023,cat:'acces',when:'octobre 2023',title:'Cisco IOS XE : interface web exposée',body:`Une faille critique (CVE-2023-20198) de l’interface web de Cisco IOS XE a permis à des attaquants de créer des comptes administrateur sur des équipements exposés à Internet. Des dizaines de milliers d’appareils auraient été compromis selon les rapports de l’époque. Cisco a recommandé de désactiver le serveur HTTP/HTTPS sur les systèmes exposés.`,lesson:`Un service de gestion exposé sur Internet est une porte d’entrée : le désactiver ou le restreindre fait partie du durcissement.`,src:`Source : avis de sécurité Cisco et Cisco Talos (octobre 2023) ; les nombres d’appareils varient selon les sources.`}],
+ defense:['Ne pas exposer l’administration sur Internet.','Désactiver les services inutiles.','Appliquer les correctifs rapidement.']},
+{id:'approach',name:'3 approches : routeur seul, défense en profondeur, DMZ',short:'3 approches',tag:'4.1',
+ def:`<ul><li><b>Routeur seul</b> : un seul routeur relie le LAN protégé à Internet. Toutes les politiques de sécurité sont sur cet équipement.</li><li><b>Défense en profondeur</b> : plusieurs couches avant le LAN : <b>routeur de bordure</b>, <b>pare-feu</b>, <b>routeur interne</b>.</li><li><b>DMZ</b> : zone pour les serveurs qui doivent être accessibles depuis Internet, placée entre deux routeurs (interne côté LAN protégé, externe côté non protégé).</li></ul>`,
+ terms:[['DMZ','Zone démilitarisée : réseau intermédiaire pour les serveurs exposés.'],['Pare-feu','Filtre le trafic selon des règles.'],['Routeur interne','Relie le pare-feu ou la DMZ au LAN protégé.']],
+ flow:{n:[['it','Internet','c',0,1],['er','Routeur de bordure','s',1,1],['fw','Pare-feu','s',3,1],['ir','Routeur interne','s',4,1],['dm','DMZ|(serveur web)','v',3,0],['la','LAN protégé','u',5,2]],
+  s:[[`<b>Défense en profondeur</b> : le trafic venant d’Internet rencontre d’abord le routeur de bordure, qui filtre grossièrement.`,'it','er','trafic entrant','er'],
+   [`Puis le pare-feu inspecte le trafic en profondeur.`,'er','fw','trafic filtré','fw'],
+   [`<b>DMZ</b> : les requêtes web vont vers le serveur de la DMZ, isolé du LAN.`,'fw','dm','requête web','dm'],
+   [`Le trafic autorisé vers le LAN passe par le routeur interne.`,'fw','ir','trafic autorisé','ir'],
+   [`Le LAN protégé est atteint seulement après trois couches. Si le serveur de la DMZ est compromis, il ne donne pas accès direct au LAN.`,'ir','la','trafic filtré 3 fois','ok:la']]},
+ cases:[{real:true,year:2013,cat:'acces',when:'fin 2013',title:'Target : segmentation insuffisante',body:`Les attaquants ont pu passer d’un accès de prestataire aux terminaux de paiement (voir Module 2) : une meilleure segmentation aurait compliqué le déplacement.`,lesson:`Les couches et zones limitent ce qu’un attaquant peut atteindre après une première brèche.`}],defense:[]},
+{id:'areas',name:'3 domaines de sécurité du routeur',short:'3 domaines',tag:'4.1',
+ def:`<div class="tbl"><table><tbody>
+<tr><td><b>Physique</b></td><td>Routeur et équipements dans une <b>salle fermée</b>, accessible aux seuls autorisés. <b>Onduleur (UPS)</b> ou groupe électrogène diesel.</td></tr>
+<tr><td><b>Système d’exploitation</b></td><td>Un maximum de <b>mémoire</b> (aide à atténuer les DoS) ; la <b>dernière version stable</b> de l’OS ; <b>copies sécurisées</b> des images d’OS et des fichiers de configuration.</td></tr>
+<tr><td><b>Durcissement (hardening)</b></td><td>Accès limité et contrôlé ; <b>désactiver les ports et interfaces inutilisés</b> ; <b>désactiver les services inutiles</b> (certains, activés par défaut, révèlent des informations à un attaquant).</td></tr></tbody></table></div>`,
+ terms:[['UPS','Alimentation de secours : garde l’équipement allumé lors d’une coupure.'],['Image IOS','Fichier du système d’exploitation du routeur.'],['Durcissement','Réduire la surface d’attaque en supprimant tout le superflu.']],
+ flow:{n:[['ph','1. Physique|salle fermée, UPS','x',0,1],['os','2. OS|version stable','x',2,0],['hd','3. Durcissement|ports, services','x',4,1],['ro','Routeur|sécurisé','s',2,2]],
+  s:[[`<b>1. Physique</b> : porte verrouillée, accès contrôlé, alimentation de secours.`,'','','','ph'],
+   [`<b>2. Système</b> : OS stable et à jour, plus des sauvegardes de l’image et de la configuration, pour remplacer vite un équipement détruit.`,'ph','os','','os'],
+   [`<b>3. Durcissement</b> : ports inutilisés coupés, services inutiles désactivés.`,'os','hd','','hd'],
+   [`Les trois domaines ensemble donnent un routeur durci.`,'hd','ro','','ok:ro ok:ph ok:os ok:hd']]},
+ cases:[],defense:[]},
+{id:'admin',name:'Sécuriser l’accès administratif : local et distant',short:'Accès admin',tag:'4.1',
+ def:`<p>Si une personne non autorisée obtient l’accès administratif, elle peut <b>modifier le routage, désactiver des fonctions ou découvrir d’autres systèmes</b>. Six tâches :</p><ul><li>restreindre l’accessibilité de l’équipement ;</li><li>journaliser tous les accès ;</li><li>authentifier l’accès ;</li><li>autoriser les actions ;</li><li>présenter une notification légale ;</li><li>garantir la confidentialité des données.</li></ul><div class="tbl"><table><tbody><tr><td><b>Accès local</b></td><td>Physique, par câble console sur le <b>port console</b>. Utilisé surtout pour la configuration initiale.</td></tr><tr><td><b>Accès distant</b></td><td>Telnet, SSH, HTTP, HTTPS ou SNMP depuis un ordinateur (local ou distant). Le port auxiliaire existe aussi.</td></tr></tbody></table></div>`,
+ terms:[['Port console','Port de connexion directe par câble.'],['Port auxiliaire (aux)','Ancien port d’accès distant par modem.'],['SNMP','Protocole de supervision des équipements.'],['AAA','Authentification, autorisation, traçabilité (complément).']],
+ flow:{n:[['ad','Administrateur','u',0,1],['co','Console|(local)','s',2,0],['vt','Lignes VTY|(distant)','s',2,2],['ro','Routeur','s',4,1]],
+  s:[[`Accès <b>local</b> : l’administrateur se branche avec un câble console, pour la configuration initiale.`,'ad','co','câble console','co'],
+   [`Le port console mène au routeur.`,'co','ro','session locale','ro'],
+   [`Accès <b>distant</b> : par le réseau, via les lignes VTY (Telnet ou SSH).`,'ad','vt','Telnet / SSH','vt'],
+   [`Chaque voie doit être authentifiée, limitée et journalisée.`,'vt','ro','session distante','ok:ro']]},
+ cases:[],defense:[]}
+]);
+
+/* ===== 4.2 Mots de passe ===== */
+section('s-pass',[
+{id:'weak',name:'Mots de passe faibles et forts',short:'Faibles / forts',tag:'4.2',
+ def:`<div class="tbl"><table><thead><tr><th>Mot de passe</th><th>Pourquoi</th></tr></thead><tbody>
+<tr><td>secret</td><td>Faible : mot du dictionnaire.</td></tr><tr><td>smith</td><td>Faible : nom de jeune fille de la mère.</td></tr><tr><td>toyota</td><td>Faible : marque de voiture.</td></tr><tr><td>bob1967</td><td>Faible : nom et date de naissance.</td></tr><tr><td>Blueleaf23</td><td>Faible : mots simples et chiffres.</td></tr>
+<tr><td>b67n42d39c</td><td>Fort : alphanumérique mélangé.</td></tr><tr><td>12^h u4@1p7</td><td>Fort : alphanumérique, symboles, avec un espace.</td></tr></tbody></table></div><p>Mesurez la force d’un mot de passe : <input id="pwt" type="text" placeholder="essayez un mot de passe fictif" autocomplete="off" style="padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit;width:min(100%,280px)"> <span id="pwr" class="chip">—</span></p><p style="font-size:.85rem;color:var(--muted)">Évaluation locale et simplifiée, rien n’est envoyé. N’y saisissez jamais un vrai mot de passe.</p>`,
+ terms:[['Mot de passe fort','Long, imprévisible, mélange de types de caractères, sans lien avec vous.'],['Passphrase','Phrase de passe longue, facile à retenir (complément).'],['Attaque par dictionnaire','Essai de mots courants.']],
+ cases:[{real:true,year:2012,cat:'acces',when:'2012',title:'LinkedIn : hachages non salés',body:`En 2012, environ 6,5 millions de hachages de mots de passe LinkedIn ont été publiés. Ils étaient hachés en SHA-1 sans sel : beaucoup ont été retrouvés rapidement, surtout les mots de passe faibles. La fuite complète, d’environ 117 millions de comptes, a ressurgi en 2016.`,lesson:`Mot de passe faible + hachage faible = mot de passe retrouvé. D’où les algorithmes forts (type 8, 9 sur Cisco) et les mots de passe longs.`,src:`Source : presse spécialisée et communiqués de LinkedIn (2012, 2016).`}],defense:['Longueur et unicité avant tout.','Gestionnaire de mots de passe.','MFA lorsque c’est possible.']},
+{id:'cfg',name:'Configurer les mots de passe IOS',short:'Commandes de base',tag:'4.2',
+ def:`<p>Trois points d’accès, trois commandes :</p><pre class="cli"><span class="c"># Console (mode EXEC utilisateur)</span>
+R1(config)# line console 0
+R1(config-line)# password MotDePasse1
+R1(config-line)# login
+
+<span class="c"># Mode EXEC privilégié (administrateur complet)</span>
+R1(config)# enable secret MotDePasseAdmin
+
+<span class="c"># Lignes virtuelles (accès distant)</span>
+R1(config)# line vty 0 15
+R1(config-line)# password MotDePasseVty
+R1(config-line)# login</pre><ul><li><code>line console 0</code> : entre dans la configuration de la ligne console.</li><li><code>password</code> + <code>login</code> : définit le mot de passe puis active l’obligation de le saisir. <b>Sans <code>login</code>, le mot de passe ne sert à rien.</b></li><li><code>enable secret</code> : protège le mode privilégié (accès à toutes les commandes, dont la configuration).</li><li><code>line vty 0 15</code> : les 16 lignes virtuelles d’accès distant.</li></ul>`,
+ terms:[['Mode EXEC utilisateur','Accès limité (prompt >).'],['Mode EXEC privilégié','Accès complet aux commandes (prompt #).'],['VTY','Virtual Teletype : lignes d’accès distant.'],['enable secret','Mot de passe haché du mode privilégié (préféré à enable password, en clair).']],
+ flow:{n:[['us','Console','x',0,1],['ex','Mode EXEC|utilisateur >','s',2,1],['pr','Mode privilégié #|enable secret','s',4,1],['cf','Configuration','v',5,2]],
+  s:[[`On se connecte à la console : le mot de passe de ligne est demandé.`,'us','ex','password console','ex'],
+   [`Accès au mode EXEC utilisateur : possibilités limitées.`,'ex','pr','commande enable','pr'],
+   [`Pour passer en privilégié, l’<b>enable secret</b> est demandé.`,'pr','cf','enable secret','ok:pr'],
+   [`Seul ce niveau permet de configurer l’équipement.`,'','','','ok:cf']]},
+ cases:[],defense:[]},
+{id:'enc',name:'Chiffrer et durcir les mots de passe',short:'Chiffrement',tag:'4.2',
+ def:`<pre class="cli">R1(config)# service password-encryption
+R1(config)# security passwords min-length 10
+R1(config)# login block-for 120 attempts 3 within 60
+R1(config)# exec-timeout 5 0        <span class="c"># complément : déconnexion après inactivité (sous line)</span>
+R1# show running-config</pre><ul><li><b>service password-encryption</b> : chiffre tous les mots de passe en clair du fichier de configuration (ceux de ligne).</li><li><b>security passwords min-length</b> : longueur minimale imposée.</li><li><b>login block-for</b> : décourage la force brute (voir 4.3).</li><li>Désactiver l’accès privilégié inactif après un délai.</li></ul><p class="note warn"><b>Complément</b>Le chiffrement de <code>service password-encryption</code> est de type 7 : très faible et réversible, c’est surtout un voile contre un regard par-dessus l’épaule. Pour les mots de passe importants, utilisez <code>enable secret</code> avec un algorithme fort.</p>`,
+ terms:[['Type 7','Chiffrement faible et réversible des mots de passe de ligne.'],['Type 5','Hachage MD5 (par défaut pour enable secret) : n’est plus considéré sûr.'],['Type 8','PBKDF2 avec SHA-256.'],['Type 9','scrypt.'],['Hachage','Transformation à sens unique : on vérifie sans pouvoir inverser.']],
+ flow:{n:[['cl','Config|(mdp en clair)','v',0,1],['en','service|pwd-encryption','s',2,1],['ob','Mot de passe|obscurci (type 7)','x',4,1],['at','Quelqu’un lit|la config','a',5,2]],
+  s:[[`Sans chiffrement, le fichier de configuration montre les mots de passe de ligne tels quels : <code>password cisco</code>.`,'at','cl','lecture de la config','cl at'],
+   [`On exécute <code>service password-encryption</code>.`,'cl','en','commande','en'],
+   [`Les mots de passe sont obscurcis dans la config : un simple regard ne suffit plus.`,'en','ob','type 7','ok:ob'],
+   [`Mais ce type est réversible : il faut aussi des <b>secrets forts</b> (type 8 ou 9) pour les accès sensibles.`,'ob','at','décodable','at']]},
+ cases:[{real:false,title:'Scénario type : la configuration envoyée par e-mail',body:`Un technicien envoie une copie de la configuration à un collègue pour avis. Sans protection ni mots de passe forts, quiconque lit le fichier retrouve les accès de l’équipement.`,lesson:`Traitez les fichiers de configuration comme des documents sensibles.`}],defense:['Ne pas conserver de configuration avec des mots de passe faibles.','Stocker les sauvegardes de configuration de façon sécurisée.']},
+{id:'alg',name:'Algorithmes des mots de passe « secret »',short:'Types 5 / 8 / 9',tag:'4.2',
+ def:`<p>Le mot de passe <b>enable secret</b> utilise par défaut un hachage <b>MD5</b> (type 5). MD5 n’est plus jugé sûr : des attaquants peuvent reconstruire des certificats valides et usurper des sites. Depuis Cisco IOS 15.3(3)M, on recommande les types <b>8</b> et <b>9</b>.</p><div class="tbl"><table><thead><tr><th>Mot clé</th><th>Type</th><th>Algorithme</th></tr></thead><tbody><tr><td>md5</td><td>5</td><td>MD5</td></tr><tr><td>sha256</td><td>8</td><td>PBKDF2 avec SHA-256</td></tr><tr><td>scrypt</td><td>9</td><td>scrypt</td></tr></tbody></table></div><pre class="cli">R1(config)# enable algorithm-type scrypt secret MotDePasseAdmin
+R1(config)# username Bob algorithm-type sha256 secret MotDePasseBob</pre>`,
+ terms:[['MD5','Ancien algorithme de hachage, cassable.'],['PBKDF2','Fonction qui rend le calcul de chaque essai volontairement lent.'],['scrypt','Fonction lente et gourmande en mémoire : résiste aux machines de craquage.'],['Sel (salt)','Valeur aléatoire ajoutée avant hachage (complément).']],
+ flow:{n:[['pw','Mot de passe','u',0,1],['h5','MD5 (type 5)|rapide à casser','a',3,0],['h9','scrypt / PBKDF2|lent à casser','s',3,2],['at','Attaquant|avec GPU','a',5,1]],
+  s:[[`Un attaquant récupère le hachage du mot de passe dans une configuration volée.`,'pw','at','hachage','at'],
+   [`MD5 est calculé très vite : des milliards d’essais par seconde, le mot de passe tombe.`,'at','h5','essais','h5'],
+   [`scrypt ou PBKDF2 imposent un calcul lent et coûteux à chaque essai.`,'at','h9','essais','h9'],
+   [`Résultat : le même mot de passe résiste beaucoup mieux.`,'h9','pw','protégé','ok:h9 ok:pw']]},
+ cases:[{real:true,year:2012,cat:'acces',when:'2012',title:'LinkedIn : SHA-1 sans sel',body:`Voir la fiche « Faibles / forts » : un hachage rapide et non salé a facilité le craquage de millions de mots de passe.`,lesson:`Choisir un algorithme lent et adapté au stockage des mots de passe.`}],defense:[]}
+]);
+
+/* ===== 4.3 Connexions virtuelles renforcées ===== */
+section('s-login',[
+{id:'enh',name:'Renforcer le processus de connexion',short:'Principe',tag:'4.3',
+ def:`<p>Trois idées :</p><ul><li><b>Blocage de connexion (login blocking)</b> : l’équipement réagit aux échecs répétés en <b>refusant les nouvelles demandes de connexion</b>.</li><li><b>ACL</b> : autoriser seulement les connexions des adresses des administrateurs connus.</li><li><b>Bannières</b> (<code>banner</code>) : messages appropriés qui protègent l’organisation sur le plan <b>juridique</b>.</li></ul>`,
+ terms:[['Blocage de connexion','Détection qui refuse les connexions après trop d’échecs.'],['Bannière','Message affiché avant ou après la connexion (avertissement légal).'],['MOTD','Message of the day : bannière affichée à toute connexion.']],
+ flow:{n:[['at','Attaquant|hors liste','a',0,1],['ac','ACL des admins','s',2,1],['rt','Routeur','s',4,1],['ad','Administrateur|10.0.0.5','u',0,2]],
+  s:[[`Un attaquant tente de se connecter en SSH au routeur.`,'at','ac','connexion','at'],
+   [`Son adresse n’est pas dans l’ACL des administrateurs : refusé avant même le mot de passe.`,'ac','at','refusé','ok:ac'],
+   [`L’administrateur (adresse autorisée) peut se connecter.`,'ad','ac','connexion','ad'],
+   [`Il atteint le routeur, qui affiche la bannière légale.`,'ac','rt','autorisé','ok:rt']]},
+ cases:[],defense:[]},
+{id:'cmd',name:'Les commandes de renforcement',short:'Commandes',tag:'4.3',
+ def:`<pre class="cli">R1(config)# login block-for 120 attempts 3 within 60     <span class="c"># 1re des commandes login</span>
+R1(config)# ip access-list standard ADMIN-HOSTS
+R1(config-std-nacl)# permit 10.0.0.5
+R1(config)# login quiet-mode access-class ADMIN-HOSTS
+R1(config)# login delay 10
+R1(config)# login on-success log
+R1(config)# login on-failure log every 2
+R1(config)# banner motd # Acces reserve aux personnes autorisees #</pre><div class="tbl"><table><tbody>
+<tr><td><code>login block-for</code></td><td>Désactive les connexions après N échecs en T secondes, pendant une durée donnée. Défend contre les DoS et la force brute. <b>À saisir avant toute autre commande login.</b></td></tr>
+<tr><td><code>login quiet-mode access-class</code></td><td>Associe une ACL aux hôtes autorisés à se connecter même pendant la période silencieuse.</td></tr>
+<tr><td><code>login delay</code></td><td>Délai (secondes) à attendre entre deux échecs.</td></tr>
+<tr><td><code>login on-success / on-failure</code></td><td>Journaliser les connexions réussies ou échouées (syslog).</td></tr>
+<tr><td><code>banner {motd|exec|login}</code></td><td>Message légal ; le délimiteur encadre le texte.</td></tr></tbody></table></div>`,
+ terms:[['syslog','Protocole de journalisation des événements.'],['Délimiteur','Caractère (ici #) qui marque le début et la fin du texte de bannière.']],
+ flow:{n:[['at','Attaquant','a',0,1],['rt','Routeur|login block-for','s',2,1],['lg','Syslog','x',3,0],['ad','Admin|dans l’ACL','u',5,1]],
+  s:[[`Chaque échec est compté et un délai (<code>login delay</code>) s’impose avant l’essai suivant.`,'at','rt','échec','rt'],
+   [`Chaque échec est journalisé (<code>login on-failure log</code>).`,'rt','lg','événement','lg'],
+   [`Seuil atteint : mode silencieux, tout le monde est refusé... sauf l’ACL des admins.`,'rt','at','refus','ok:rt'],
+   [`L’administrateur autorisé peut encore se connecter pour réagir.`,'ad','rt','connexion','ok:ad']]},
+ cases:[],defense:[]},
+{id:'modes',name:'Mode normal et mode silencieux',short:'Normal / silencieux',tag:'4.3',
+ def:`<p>La commande <b>login block-for</b> surveille l’activité de connexion et fonctionne en deux modes :</p><ul><li><b>Mode normal (watch mode)</b> : le routeur compte les échecs sur la période définie.</li><li><b>Mode silencieux (quiet mode)</b> : si le seuil est dépassé, <b>toutes</b> les connexions Telnet, SSH et HTTP sont refusées pendant la durée indiquée.</li></ul><p>Essayez dans le simulateur plus bas, dans la section « Simulateur ».</p>`,
+ terms:[['Watch mode','Mode de comptage des échecs.'],['Quiet mode','Période pendant laquelle toutes les connexions sont refusées.']],
+ flow:{n:[['no','Mode normal|(compte échecs)','s',0,1],['qu','Mode silencieux|(tout refusé)','a',3,1],['re','Retour au mode|normal','s',5,1]],
+  s:[[`En mode normal, le routeur accepte les tentatives et compte les échecs dans la fenêtre de temps.`,'','','','no'],
+   [`Trois échecs en 60 secondes : le seuil est dépassé.`,'no','qu','seuil atteint','qu'],
+   [`Pendant 120 secondes, toute connexion Telnet, SSH ou HTTP est refusée.`,'qu','qu','','qu'],
+   [`La période écoulée, le routeur revient en mode normal.`,'qu','re','fin du délai','ok:re']]},
+ cases:[{real:false,title:'Scénario type',body:`Un outil de force brute essaie 5 000 mots de passe : le blocage le fait passer de milliers d’essais par minute à quelques essais.`,lesson:`Ralentir l’attaquant suffit souvent à la rendre impraticable.`}],defense:[]},
+{id:'ver',name:'Vérifier : show login',short:'Vérifier',tag:'4.3',
+ def:`<pre class="cli">R1# show login
+R1# show login failures</pre><ul><li><code>show login</code> : vérifie les paramètres de <code>login block-for</code> et le mode actuel.</li><li><code>show login failures</code> : détails des échecs, dont l’<b>adresse IP d’origine</b>.</li><li><code>security authentication failure rate</code> : génère un message de journal quand le taux d’échecs est dépassé (alternative à <code>login on-failure log</code>).</li></ul>`,
+ terms:[['Taux d’échecs','Nombre d’échecs par période.'],['Journal (log)','Trace des événements pour l’analyse.']],cases:[],defense:[]}
+]);
+
+/* ===== 4.4 SSH ===== */
+section('s-ssh',[
+{id:'why',name:'Telnet contre SSH',short:'Pourquoi SSH',tag:'4.4',
+ def:`<p><b>Telnet</b> envoie tout en <b>clair</b>, mots de passe compris. <b>SSH</b> (Secure Shell) <b>chiffre</b> toute la session et authentifie les parties : il remplace Telnet pour la gestion à distance.</p>`,
+ terms:[['SSH','Secure Shell : accès distant chiffré.'],['Telnet','Accès distant sans chiffrement (port 23).'],['Port 22','Port standard de SSH.']],
+ flow:{n:[['ad','Administrateur','u',0,1],['rs','Réseau','c',2,1],['ro','Routeur','s',4,1],['sn','Sniffer','a',2,2]],
+  s:[[`<b>Telnet</b> : l’administrateur envoie son mot de passe sur le réseau.`,'ad','rs','mot de passe en clair','' ],
+   [`Un sniffer sur le chemin le lit tel quel.`,'rs','sn','copie','sn'],
+   [`<b>SSH</b> : la session est chiffrée de bout en bout.`,'ad','ro','trafic chiffré','ok:ro'],
+   [`Le sniffer ne voit que des données illisibles.`,'rs','sn','illisible','ok:sn']]},
+ cases:[{real:true,year:2016,cat:'dos',when:'2016',title:'Mirai : Telnet et mots de passe par défaut',body:`Mirai a infecté des centaines de milliers d’objets connectés via Telnet et une courte liste d’identifiants par défaut (voir Module 2).`,lesson:`Désactiver Telnet, changer les identifiants par défaut.`}],defense:['Désactiver Telnet, activer SSH version 2.','Restreindre l’accès SSH à des adresses connues.']},
+{id:'steps',name:'Activer SSH : les 6 étapes',short:'6 étapes',tag:'4.4',
+ def:`<p>Configuration d’un équipement Cisco pour SSH :</p><pre class="cli"><span class="c"># 1. Nom d'hôte unique</span>
+Router(config)# hostname R1
+<span class="c"># 2. Nom de domaine IP</span>
+R1(config)# ip domain name span.com
+<span class="c"># 3. Générer la clé qui chiffrera le trafic SSH</span>
+R1(config)# crypto key generate rsa general-keys modulus 2048
+<span class="c"># 4. Créer un utilisateur local</span>
+R1(config)# username Bob secret MotDePasseBob
+<span class="c"># 5. Authentifier avec la base locale</span>
+R1(config)# line vty 0 15
+R1(config-line)# login local
+<span class="c"># 6. Autoriser SSH en entrée sur les lignes vty</span>
+R1(config-line)# transport input ssh</pre><p class="note"><b>Complément</b>Le cours utilise souvent un module de 1024 bits ; on recommande aujourd’hui au moins 2048 bits, et <code>ip ssh version 2</code>.</p>`,
+ terms:[['RSA','Algorithme de clé publique/privée utilisé pour SSH.'],['Modulus','Taille de la clé RSA en bits.'],['login local','Authentification par la base d’utilisateurs locale.'],['transport input ssh','Autorise seulement SSH (pas Telnet) sur les lignes vty.']],
+ flow:{n:[['s1','1. hostname','x',0,0],['s2','2. ip domain-name','x',1,1],['s3','3. clé RSA','x',2,0],['s4','4. username','x',3,1],['s5','5. login local','x',4,0],['s6','6. transport|input ssh','x',5,1]],
+  s:[[`<b>1.</b> Un nom d’hôte unique : la clé en dépend.`,'','','','ok:s1'],
+   [`<b>2.</b> Un nom de domaine IP : il sert avec le nom d’hôte à nommer la clé.`,'s1','s2','','ok:s2'],
+   [`<b>3.</b> Génération de la paire de clés RSA : active le serveur SSH.`,'s2','s3','','ok:s3'],
+   [`<b>4.</b> Création d’un utilisateur dans la base locale.`,'s3','s4','','ok:s4'],
+   [`<b>5.</b> Les lignes vty s’authentifient avec cette base (<code>login local</code>).`,'s4','s5','','ok:s5'],
+   [`<b>6.</b> Seul SSH est accepté en entrée (<code>transport input ssh</code>) : Telnet est refusé.`,'s5','s6','','ok:s6']]},
+ cases:[],defense:[]},
+{id:'tune',name:'Renforcer et vérifier SSH',short:'Vérifier / renforcer',tag:'4.4',
+ def:`<pre class="cli">R1# show ip ssh
+R1(config)# ip ssh time-out 60
+R1(config)# ip ssh authentication-retries 2
+R1(config)# ip ssh version 2
+R1# show ssh</pre><ul><li><code>show ip ssh</code> : vérifie les paramètres SSH.</li><li><code>ip ssh time-out</code> : durée accordée pour s’authentifier (<b>120 s</b> par défaut).</li><li><code>ip ssh authentication-retries</code> : nombre d’essais consécutifs (<b>3</b> par défaut) avant déconnexion.</li><li><code>show ssh</code> : état des connexions SSH clientes.</li></ul>`,
+ terms:[['time-out','Durée maximale accordée.'],['Retries','Nombre d’essais.']],
+ flow:{n:[['us','Utilisateur','u',0,1],['rt','Routeur SSH|retries = 2','s',3,1],['dc','Déconnecté','x',5,1]],
+  s:[[`L’utilisateur se connecte ; il a un nombre limité d’essais.`,'us','rt','connexion','rt'],
+   [`1er mot de passe faux.`,'us','rt','échec 1','rt'],
+   [`2e mot de passe faux : limite atteinte.`,'us','rt','échec 2','rt'],
+   [`Le routeur déconnecte : l’attaquant doit recommencer, ce qui le ralentit.`,'rt','dc','déconnexion','ok:rt']]},
+ cases:[],defense:[]},
+{id:'conn',name:'Se connecter en SSH : routeur à routeur, hôte à routeur',short:'Se connecter',tag:'4.4',
+ def:`<p>Un routeur Cisco avec SSH peut être <b>serveur</b> (accepte des clients) et <b>client</b> (se connecte à un autre routeur).</p><pre class="cli">R2# ssh -l Bob 192.168.1.1        <span class="c"># de R2 vers R1</span>
+R1# show ssh                       <span class="c"># voir les connexions</span></pre><p>Depuis un ordinateur : un client SSH (<b>PuTTY</b>, <b>OpenSSH</b>, <b>Tera Term</b>) lance la connexion, le routeur demande identifiant et mot de passe, puis on administre comme en Telnet, mais chiffré.</p>`,
+ terms:[['Client SSH','Programme qui initie la connexion (PuTTY, OpenSSH, Tera Term).'],['Serveur SSH','Équipement qui accepte les connexions.'],['ssh -l','Option qui précise le nom d’utilisateur.']],
+ flow:{n:[['pc','Ordinateur|(PuTTY)','u',0,1],['r2','R2 (client)','s',2,0],['r1','R1 (serveur SSH)','s',4,1]],
+  s:[[`Depuis l’ordinateur, un client SSH contacte R1.`,'pc','r1','demande SSH','r1'],
+   [`R1 demande le nom d’utilisateur et le mot de passe, vérifiés dans sa base locale.`,'r1','pc','authentification','pc'],
+   [`R2 peut aussi se connecter à R1 avec <code>ssh -l Bob 192.168.1.1</code>.`,'r2','r1','ssh -l Bob','r2'],
+   [`Les deux sessions sont chiffrées.`,'','','','ok:r1 ok:pc ok:r2']]},
+ cases:[],defense:[]}
+]);
+
+/* ===== outils interactifs ===== */
+(function(){
+/* force du mot de passe */
+document.addEventListener('input',e=>{if(e.target.id!=='pwt')return;const v=e.target.value,r=document.getElementById('pwr');let s=0;if(v.length>=8)s++;if(v.length>=10)s++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v))s++;if(/\d/.test(v))s++;if(/[^A-Za-z0-9]/.test(v))s++;if(/[a-z]\d+[a-z]/i.test(v))s++;if(/^[A-Za-z]+\d{0,4}$/.test(v))s=Math.min(s,1);
+ r.textContent=!v?'—':s<=1?'Faible':s<=3?'Moyen':'Fort';r.className='chip '+(!v?'':s<=1?'t':s<=3?'a':'o')});
+/* simulateur login block-for */
+const W=30,N=3,Q=20;let fails=[],quiet=0,tm=null;
+const sim=document.getElementById('sim');
+sim.innerHTML='<div class="card"><p class="blk-t">Configuration simulée</p><pre class="cli" style="margin:0">R1(config)# login block-for '+Q+' attempts '+N+' within '+W+'</pre><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="btn" id="sf">Tentative échouée</button><button class="btn" id="ss">Tentative réussie</button><button class="btn" id="sr">Réinitialiser</button></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="chip" id="sm">Mode normal</span><span id="sc" style="font-family:var(--font-m);font-size:.85rem">Échecs récents : 0 / '+N+'</span></div><div class="meter"><i id="sb"></i></div><pre class="cli" id="sl" style="margin:0;min-height:96px;max-height:160px;overflow:auto"></pre></div>';
+const $l=document.getElementById('sl');
+const log=t=>{$l.textContent+=t+'\n';$l.scrollTop=$l.scrollHeight};
+function draw(){const now=Date.now();fails=fails.filter(t=>now-t<W*1000);const m=document.getElementById('sm');
+ if(quiet>now){m.textContent='Mode silencieux : '+Math.ceil((quiet-now)/1000)+' s';m.className='chip t'}else{if(quiet){quiet=0;log('%SEC_LOGIN-1-QUIET_MODE_OFF : retour au mode normal');fails=[]}m.textContent='Mode normal (watch)';m.className='chip o'}
+ document.getElementById('sc').textContent='Échecs récents : '+fails.length+' / '+N;document.getElementById('sb').style.width=Math.min(100,fails.length/N*100)+'%'}
+function tick(){draw();if(!quiet&&!fails.length&&tm){clearInterval(tm);tm=null}}
+function ensure(){if(!tm)tm=setInterval(tick,500)}
+document.getElementById('sf').onclick=()=>{const now=Date.now();if(quiet>now){log('Connexion refusée : mode silencieux (Telnet, SSH et HTTP refusés)');return}fails.push(now);log('%SEC_LOGIN-4-LOGIN_FAILED : tentative échouée ('+fails.length+'/'+N+')');if(fails.length>=N){quiet=now+Q*1000;log('%SEC_LOGIN-1-QUIET_MODE_ON : connexions refusées pendant '+Q+' s')}ensure();draw()};
+document.getElementById('ss').onclick=()=>{if(quiet>Date.now()){log('Connexion refusée : mode silencieux. Même un bon mot de passe est refusé.');return}log('%SEC_LOGIN-5-LOGIN_SUCCESS : connexion réussie');draw()};
+document.getElementById('sr').onclick=()=>{fails=[];quiet=0;$l.textContent='';draw()};
+draw();
+})();
+
+/* aide-mémoire */
+(function(){const C=[['line console 0','Entrer dans la config de la ligne console'],['password mdp','Définir le mot de passe de la ligne'],['login','Exiger le mot de passe (sans ceci, aucun contrôle)'],['enable secret mdp','Protéger le mode privilégié'],['line vty 0 15','Config des 16 lignes distantes'],['service password-encryption','Chiffrer les mots de passe de ligne dans la config'],['security passwords min-length n','Longueur minimale'],['enable algorithm-type scrypt secret mdp','Secret en type 9 (ou sha256 = type 8)'],['login block-for s attempts n within s','Bloquer après n échecs'],['login quiet-mode access-class ACL','Hôtes autorisés en mode silencieux'],['login delay s','Délai entre échecs'],['login on-success log / login on-failure log','Journaliser les connexions'],['security authentication failure rate','Alerte si taux d’échecs dépassé'],['banner motd # texte #','Bannière légale'],['hostname nom','1 : nom d’hôte'],['ip domain name nom','2 : nom de domaine'],['crypto key generate rsa general-keys modulus n','3 : clé RSA'],['username nom secret mdp','4 : utilisateur local'],['login local','5 : authentification locale'],['transport input ssh','6 : SSH seulement'],['show running-config','Voir la config'],['show login / show login failures','Vérifier le blocage et les échecs'],['show ip ssh / show ssh','Vérifier SSH'],['ip ssh time-out s','Délai d’authentification SSH'],['ip ssh authentication-retries n','Essais SSH'],['ssh -l utilisateur adresse','Se connecter en SSH depuis le routeur']];
+document.getElementById('ch').innerHTML=C.map(c=>'<tr><td><code>'+c[0]+'</code></td><td>'+c[1]+'</td></tr>').join('')})();
+
+/* quiz */
+(function(){
+const Q=[
+['Quel routeur est « le dernier avant Internet » ?',['Routeur interne','Routeur de bordure','Routeur d’accès','Routeur DMZ'],1,'Il est la première et dernière ligne de défense.'],
+['Quelles trois couches forment la défense en profondeur ?',['Bordure, pare-feu, routeur interne','Console, aux, vty','Physique, OS, application','DMZ, WAN, LAN'],0,'Routeur de bordure, pare-feu, routeur interne.'],
+['Quelle commande protège le mode EXEC privilégié ?',['enable secret','line console 0','login local','banner motd'],0,'enable secret.'],
+['Sans la commande « login » sur la ligne console, que se passe-t-il ?',['Le mot de passe est demandé','Aucun mot de passe n’est exigé','Le routeur redémarre','SSH s’active'],1,'Le password est défini mais non exigé.'],
+['Que fait « service password-encryption » ?',['Chiffre les mots de passe en clair de la config','Active SSH','Bloque les connexions','Génère une clé RSA'],0,'Mais de type 7, faible : utilisez aussi des secrets forts.'],
+['Quels types de secret sont recommandés (IOS 15.3(3)M et plus) ?',['Types 0 et 7','Types 5 et 7','Types 8 et 9','Type 1'],2,'sha256 (type 8) et scrypt (type 9).'],
+['« login block-for 120 attempts 3 within 60 » signifie :',['3 échecs en 60 s : connexions bloquées 120 s','Bloquer 3 s après 120 échecs','Limiter à 60 utilisateurs','Verrouiller 60 s'],0,'Seuil de 3 échecs sur 60 s, puis 120 s de mode silencieux.'],
+['Quelle commande montre l’adresse IP d’où viennent les échecs de connexion ?',['show login','show login failures','show ssh','show ip ssh'],1,'show login failures.'],
+['Dans les 6 étapes SSH, qu’est-ce qui vient juste après « hostname » ?',['transport input ssh','ip domain name','login local','username'],1,'Nom d’hôte, puis nom de domaine, puis clé, utilisateur, login local, transport.'],
+['Que fait « transport input ssh » ?',['Chiffre le disque','Autorise seulement SSH sur les lignes vty','Active Telnet','Désactive la console'],1,'Telnet est alors refusé.']];
+const q=document.getElementById('quiz');let i=0,sc=0;
+function r(){if(i>=Q.length){q.innerHTML='<h3>Score : '+sc+' / '+Q.length+'</h3><p>'+(sc>=8?'Très bien.':sc>=5?'Correct : relisez les fiches des erreurs.':'Reprenez les schémas animés.')+'</p><button class="btn primary" id="qr">Recommencer</button>';document.getElementById('qr').onclick=()=>{i=0;sc=0;r()};return}
+const x=Q[i];q.innerHTML='<div class="mono" style="color:var(--muted)">Question '+(i+1)+' / '+Q.length+'</div><h3 style="margin:6px 0 12px">'+x[0]+'</h3><div style="display:grid;gap:8px">'+x[1].map((o,k)=>'<button class="btn" data-k="'+k+'" style="text-align:left">'+o+'</button>').join('')+'</div><p id="qf" style="margin:12px 0 0"></p>';
+$$('button[data-k]',q).forEach(b=>b.onclick=()=>{if(q.__d)return;q.__d=1;const k=+b.dataset.k;if(k===x[2])sc++;$$('button[data-k]',q).forEach(c=>{const kk=+c.dataset.k;if(kk===x[2])c.style.borderColor='var(--ok)';else if(kk===k)c.style.borderColor='var(--threat)'});$('#qf').innerHTML=(k===x[2]?'<b>Juste.</b> ':'<b>Pas tout à fait.</b> ')+x[3]+' <button class="btn primary" id="qn">Suivant</button>';$('#qn').onclick=()=>{q.__d=0;i++;r()}})}
+r();
+})();
+
+/* glossaire */
+(function(){
+const m=new Map();REG.forEach(a=>(a.terms||[]).forEach(t=>{if(!m.has(t[0]))m.set(t[0],t[1])}));
+const rows=[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0],'fr'));
+const gl=document.getElementById('gl');const draw=f=>{gl.innerHTML=rows.filter(r=>(r[0]+' '+r[1]).toLowerCase().includes(f)).map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td></tr>').join('')};
+draw('');document.getElementById('gq').addEventListener('input',e=>draw(e.target.value.toLowerCase()));
+})();
+
+/* navigation */
+document.addEventListener('click',e=>{const b=e.target.closest('[data-goto]');if(b)goto(b.dataset.goto)});
+(function(){const nav=$$('.topbar a');const secs=nav.map(a=>$(a.getAttribute('href')));
+function s(){const h=document.documentElement.scrollHeight-innerHeight;$('#prog').style.width=(h>0?Math.min(100,scrollY/h*100):0)+'%';let c=-1;secs.forEach((x,i)=>{if(x&&x.getBoundingClientRect().top<140)c=i});nav.forEach((a,i)=>a.classList.toggle('on',i===c))}
+addEventListener('scroll',s,{passive:true});s();
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.02});$$('.fade').forEach(f=>io.observe(f))}else $$('.fade').forEach(f=>f.classList.add('in'))})();
+
+
+</script>
+
+</body></html>

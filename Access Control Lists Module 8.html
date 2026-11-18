@@ -1,0 +1,479 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Access Control Lists Module 8</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Concept: a field manual for a network defender. Cool slate ground, deep teal ink, one signal-orange for threats. */
+:root{
+  --bg:#eef3f6; --surface:#ffffff; --surface2:#e3ebf0; --fg:#0d2230; --muted:#4d6676; --line:#cbd8e0;
+  --accent:#0b6f8c; --accent-soft:#d3ecf4; --threat:#c2410c; --threat-soft:#fde4d6; --ok:#1b7f55; --ok-soft:#d6f0e3;
+  --font-d:'Archivo','Helvetica Neue',Arial,sans-serif; --font-b:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif; --font-m:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#09151e; --surface:#10212d; --surface2:#17303f; --fg:#e3eef4; --muted:#93acba; --line:#24404f;
+  --accent:#5cc3e0; --accent-soft:#12394a; --threat:#ff935c; --threat-soft:#3d2216; --ok:#55d394; --ok-soft:#12372a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#09151e; --surface:#10212d; --surface2:#17303f; --fg:#e3eef4; --muted:#93acba; --line:#24404f;
+  --accent:#5cc3e0; --accent-soft:#12394a; --threat:#ff935c; --threat-soft:#3d2216; --ok:#55d394; --ok-soft:#12372a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-b);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+h1,h2,h3{font-family:var(--font-d);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:700;font-stretch:90%}
+h3{font-size:1.15rem;font-weight:650}
+p{margin:0 0 .8em}
+code,.mono{font-family:var(--font-m);font-size:.88em}
+.wrap{max-width:1000px;margin:0 auto}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+.topbar .in{max-width:1000px;margin:0 auto;display:flex;gap:8px;align-items:center;padding:8px 16px;overflow-x:auto;scrollbar-width:none}
+.topbar a{white-space:nowrap;font:500 .78rem var(--font-m);color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px}
+.topbar a:hover,.topbar a.on{background:var(--accent-soft);color:var(--accent)}
+.prog{height:3px;background:var(--accent);width:0;transition:width .15s}
+.hero{padding:44px 0 28px}
+.eyebrow{font:500 .78rem var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.hero h1{font-size:clamp(2.2rem,7vw,4.2rem);font-weight:800;font-stretch:85%;letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:1.1rem;color:var(--muted);max-width:60ch;margin-top:14px}
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:26px}
+.toc a{display:block;text-decoration:none;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.toc a:hover{border-color:var(--accent)}
+.toc b{display:block;font:500 .72rem var(--font-m);color:var(--accent);letter-spacing:.08em}
+.toc span{font-weight:600;font-size:.95rem}
+section{padding:46px 0 10px;scroll-margin-top:60px}
+.sec-tag{font:500 .75rem var(--font-m);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 14px;border-radius:0 8px 8px 0;margin:16px 0}
+.note.warn{border-color:var(--threat);background:var(--threat-soft)}
+.note b:first-child{display:block;font:500 .72rem var(--font-m);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.retain{background:var(--surface2);border-radius:12px;padding:16px 18px;margin-top:22px}
+.retain h3{font-size:.8rem;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.retain ul{margin:0;padding-left:1.1em}.retain li{margin:3px 0}
+.btn,.tab{font:500 .85rem var(--font-b);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:hover,.tab:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 12px}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .72rem var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+tr:last-child td{border-bottom:0}
+.chip{display:inline-block;font:500 .78rem var(--font-m);background:var(--surface2);border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0}
+.chip.t{background:var(--threat-soft);color:var(--threat)}.chip.a{background:var(--accent-soft);color:var(--accent)}.chip.o{background:var(--ok-soft);color:var(--ok)}
+svg text{font-family:var(--font-m);fill:var(--fg)}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto}
+.diagram svg{display:block;width:100%;height:auto;min-width:560px}
+.shot{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.shot img{display:block;width:100%;height:auto}
+.fade{opacity:1;transform:none}
+.js .fade{transform:translateY(12px);transition:transform .5s}
+.js .fade.in{transform:none}
+@media (prefers-reduced-motion:reduce){.js .fade{opacity:1;transform:none;transition:none}*{animation:none!important}}
+footer{padding:50px 0 60px;color:var(--muted);font-size:.85rem}
+</style>
+<style>
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:.9rem;color:var(--muted)}
+.steps4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:22px}
+.steps4 div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:.9rem}
+.steps4 b{display:block;font:500 .72rem var(--font-m);letter-spacing:.08em;color:var(--accent);margin-bottom:2px}
+.ptabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 14px}
+.panel{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.panel>*,.pbody,.diagram{min-width:0;max-width:100%}.diagram svg{max-width:100%;height:auto}.phead h3{overflow-wrap:anywhere}
+.phead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.phead h3{font-size:1.4rem}
+.blk-t{font:500 .72rem var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+dl.terms{margin:0;display:grid;grid-template-columns:minmax(110px,max-content) 1fr;gap:6px 14px;font-size:.92rem}
+dl.terms dt{font-weight:600;color:var(--accent)}dl.terms dd{margin:0}
+@media (max-width:520px){dl.terms{grid-template-columns:1fr}dl.terms dd{margin-bottom:6px}}
+.case{border:1px solid var(--line);border-left:4px solid var(--threat);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 16px}
+.case.sc{border-left-color:var(--accent)}
+.case h4{margin:6px 0 6px;font-family:var(--font-d);font-size:1.05rem}
+.case .lesson{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:.92rem;color:var(--muted)}
+.case .src{font-size:.8rem;color:var(--muted);margin-top:6px}
+.def ul{margin:0;padding-left:1.1em}.def li{margin:4px 0}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.stepcard{margin-top:10px;min-height:92px}
+.btn:disabled{opacity:.45;cursor:default}
+#nodes .nd rect,#nodes .nd ellipse{fill:var(--surface2);stroke:var(--line);stroke-width:2;transition:fill .3s,stroke .3s}
+.nd text{font-size:11px;pointer-events:none}
+#nodes .nd.t-a rect{fill:var(--threat-soft);stroke:var(--threat)}
+#nodes .nd.t-v rect{stroke:var(--accent)}
+#nodes .nd.t-c ellipse{stroke-dasharray:5 4;stroke:var(--accent)}
+#nodes .nd.hit rect,#nodes .nd.hit ellipse{fill:var(--threat-soft);stroke:var(--threat)}
+#nodes .nd.ok rect{fill:var(--ok-soft);stroke:var(--ok)}
+.lk{stroke:var(--line);stroke-width:2}
+.lk.on{stroke:var(--threat);stroke-dasharray:6 5;animation:dash 1s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-22}}
+.pk-l{font-size:10px;fill:var(--threat)!important;font-weight:600}
+.tl{display:grid;gap:8px;margin-top:12px}
+.tl button{display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--fg);font:inherit;cursor:pointer}
+.tl button:hover{border-color:var(--accent)}
+.tl .yr{font:500 1rem var(--font-m);color:var(--threat)}
+.tl .nm{font-weight:600;font-size:.95rem}.tl .nm small{display:block;font-weight:400;color:var(--muted)}
+@media (max-width:520px){.tl button{grid-template-columns:52px 1fr}.tl .chip{display:none}}
+.risk4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.cl label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:.93rem}
+.cl input{margin-top:5px}
+.meter{height:10px;border-radius:6px;background:var(--surface2);overflow:hidden;margin:8px 0}.meter i{display:block;height:100%;background:var(--threat);width:0;transition:width .3s}
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.tools .card{padding:12px 14px;font-size:.9rem}.tools b{color:var(--accent)}
+.panel .diagram svg{min-width:520px}@media (min-width:600px){.hint{display:none}}.hint{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+</style>
+<style>
+.cli{background:#0f1b22;color:#d6e6ea;border-radius:10px;padding:12px 14px;font:400 .82rem/1.55 var(--font-m);overflow-x:auto;white-space:pre;margin:10px 0}
+.cli .c{color:#7fa3ad}
+code{font:500 .85em var(--font-m);background:var(--surface2);padding:1px 5px;border-radius:4px}
+.cli code{background:none;padding:0}
+</style>
+<div class="wrap">
+<nav class="topbar" aria-label="Sommaire"><div class="in"><a href="#a1">Rôle</a><a href="#a2">Wildcard</a><a href="#a3">Config</a><a href="#a4">Modifier</a><a href="#a5">Mise en œuvre</a><a href="#a6">Attaques</a><a href="#a7">IPv6</a><a href="#a8">Commandes</a><a href="#a9">Quiz</a><a href="#a10">Glossaire</a></div><div class="prog" id="prog"></div></nav>
+<header class="hero"><div class="eyebrow">Cisco Networking Security · Module 8</div>
+<h1>Access Control <em>Lists</em></h1>
+<p class="lead">Des règles lues de haut en bas qui laissent passer ou jettent les paquets. Simple à écrire, facile à mal placer.</p>
+<div class="legend"><span class="chip t">Cas réel</span><span>événement documenté publiquement</span><span class="chip a">Scénario type</span><span>exemple pédagogique</span></div>
+<div class="steps4"><div><b>8.1-8.2</b>Principe, wildcard</div><div><b>8.3-8.5</b>Configurer et placer</div><div><b>8.6</b>Attaques</div><div><b>8.7</b>IPv6</div></div>
+</header>
+<section id="a1"><div class="fade"><div class="sec-tag">8.1</div><h2>Rôle et fonctionnement</h2><p class="lead">Principe, types et sens.</p><div id="s-intro"></div></div></section>
+<section id="a2"><div class="fade"><div class="sec-tag">8.2</div><h2>Masque générique</h2><p class="lead">Le piège du 0 et du 1.</p><div id="s-wild"></div></div></section>
+<section id="a3"><div class="fade"><div class="sec-tag">8.3</div><h2>Configurer des ACL IPv4</h2><p class="lead">Standard, étendue, established.</p><div id="s-conf"></div></div></section>
+<section id="a4"><div class="fade"><div class="sec-tag">8.4</div><h2>Modifier</h2><p class="lead">Numéros de séquence.</p><div id="s-mod"></div></div></section>
+<section id="a5"><div class="fade"><div class="sec-tag">8.5</div><h2>Mise en œuvre</h2><p class="lead">Règles et placement.</p><div id="s-impl"></div></div></section>
+<section id="a6"><div class="fade"><div class="sec-tag">8.6</div><h2>Atténuer les attaques</h2><p class="lead">Usurpation, services, ICMP, SNMP.</p><div id="s-mit"></div></div></section>
+<section id="a7"><div class="fade"><div class="sec-tag">8.7</div><h2>ACL IPv6</h2><p class="lead">Spécificités.</p><div id="s-v6"></div></div></section>
+<section id="a8"><div class="fade"><div class="sec-tag">Révision</div><h2>Aide-mémoire</h2><p class="lead"></p><p></p><div class="tbl"><table><thead><tr><th>Commande</th><th>Rôle</th></tr></thead><tbody id="ch"></tbody></table></div></div></section>
+<section id="a9"><div class="fade"><div class="sec-tag">Révision</div><h2>Quiz</h2><p class="lead">Dix-huit questions.</p><div class="card" id="quiz"></div></div></section>
+<section id="a10"><div class="fade"><div class="sec-tag">Révision</div><h2>Glossaire</h2><p class="lead"></p><input id="gq" type="search" placeholder="Filtrer (ex. wildcard)" aria-label="Filtrer le glossaire" style="width:100%;max-width:420px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit"><div class="tbl" style="margin-top:10px"><table><thead><tr><th>Terme</th><th>Définition</th></tr></thead><tbody id="gl"></tbody></table></div></div></section>
+<footer>Module 8 · Cisco Networking Security v1.0 · notes de cours en français. Valeurs fictives.</footer>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>Array.from((r||document).querySelectorAll(s));
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.documentElement.classList.add('js');
+const mk=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const gx=c=>75+c*122,gy=r=>50+r*100;
+const REG=[];      // every attack, for glossary and timeline
+const SECS={};     // section id -> items
+
+
+/* ---------- animated flow ----------
+ f.n : nodes   [id,label,type,col,row]   type: a attacker, v victim, u user, s server, c cloud, d device, x neutral
+ f.s : steps   [text, from, to, packetLabel, "ids that turn red/green"]   (from/to may be '' for a pure highlight)
+ label prefix "ok:" in hit list turns a node green */
+function flow(host,f){
+  if(host.__stop)host.__stop();
+  host.innerHTML='<div class="diagram"><svg viewBox="0 0 760 300" role="img" aria-label="Schéma animé"><g id="links"></g><g id="nodes"></g><g id="pk"></g></svg></div><p class="hint">Faites glisser le schéma latéralement si besoin.</p><div class="card stepcard"></div><div class="ctrls"><button class="btn" data-a="prev">← Précédent</button><button class="btn primary" data-a="next">Suivant →</button><button class="btn" data-a="play">▶ Lecture auto</button><button class="btn" data-a="reset">↺ Recommencer</button></div>';
+  const svg=$('svg',host),L=$('#links',host),N=$('#nodes',host),P=$('#pk',host),card=$('.stepcard',host);
+  const pos={},els={},links={};
+  f.n.forEach(n=>{pos[n[0]]=[gx(n[3]),gy(n[4])]});
+  f.s.forEach(s=>{if(s[1]&&s[2]&&s[1]!==s[2]){const k=[s[1],s[2]].sort().join('|');if(!links[k]){const a=pos[s[1]],b=pos[s[2]];links[k]=mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'lk'},L)}}});
+  f.n.forEach(n=>{
+    const [id,label,type,c,r]=n,x=gx(c),y=gy(r);
+    const g=mk('g',{class:'nd t-'+type},N);
+    if(type==='c')mk('ellipse',{cx:x,cy:y,rx:58,ry:27},g);else mk('rect',{x:x-58,y:y-26,width:116,height:52,rx:9},g);
+    const ls=label.split('|');
+    ls.forEach((t,i)=>{const e=mk('text',{x:x,y:y+4+(i-(ls.length-1)/2)*13,'text-anchor':'middle'},g);e.textContent=t});
+    els[id]=g;
+  });
+  const dot=mk('circle',{r:7,cx:0,cy:0,fill:'var(--threat)',opacity:0},P);
+  const lab=mk('text',{x:0,y:0,'text-anchor':'middle',class:'pk-l'},P);
+  let i=0,raf=0,tm=null,playing=false;
+  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  function move(a,b,label,done){
+    cancelAnimationFrame(raf);
+    if(!a||!b||a===b){dot.setAttribute('opacity',0);lab.textContent='';done&&done();return}
+    const A=pos[a],B=pos[b];dot.setAttribute('opacity',1);lab.textContent=label||'';
+    const put=(x,y)=>{dot.setAttribute('cx',x);dot.setAttribute('cy',y);lab.setAttribute('x',x);lab.setAttribute('y',y-14)};
+    if(reduce){put(B[0],B[1]);done&&done();return}
+    const t0=performance.now(),D=900;
+    (function f(ts){const k=Math.min(1,(ts-t0)/D),e=ease(k);put(A[0]+(B[0]-A[0])*e,A[1]+(B[1]-A[1])*e);if(k<1)raf=requestAnimationFrame(f);else done&&done()})(t0);
+  }
+  function show(k,animate){
+    i=Math.max(0,Math.min(f.s.length-1,k));
+    Object.values(els).forEach(g=>g.classList.remove('hit','ok'));
+    Object.values(links).forEach(l=>l.classList.remove('on'));
+    for(let j=0;j<=i;j++){const h=f.s[j][4];if(h)h.split(' ').forEach(id=>{if(id.startsWith('ok:')){const g=els[id.slice(3)];if(g){g.classList.remove('hit');g.classList.add('ok')}}else if(els[id]&&!els[id].classList.contains('ok'))els[id].classList.add('hit')})}
+    const s=f.s[i];
+    if(s[1]&&s[2]&&s[1]!==s[2]){const l=links[[s[1],s[2]].sort().join('|')];if(l)l.classList.add('on')}
+    card.innerHTML='<div class="mono" style="color:var(--threat);margin-bottom:4px">ÉTAPE '+(i+1)+' / '+f.s.length+'</div><p style="margin:0">'+s[0]+'</p>';
+    $('[data-a=prev]',host).disabled=i===0;$('[data-a=next]',host).disabled=i===f.s.length-1;
+    move(s[1],s[2],s[3]);
+  }
+  function stop(){playing=false;clearTimeout(tm);$('[data-a=play]',host).textContent='▶ Lecture auto'}
+  function tick(){if(!playing)return;if(i>=f.s.length-1){stop();return}show(i+1);tm=setTimeout(tick,3200)}
+  host.onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const a=b.dataset.a;
+    if(a==='prev'){stop();show(i-1)}else if(a==='next'){stop();show(i+1)}else if(a==='reset'){stop();show(0)}
+    else if(a==='play'){if(playing){stop();return}if(i>=f.s.length-1)show(0);playing=true;b.textContent='⏸ Pause';tm=setTimeout(tick,3200)}};
+  host.__stop=()=>{stop();cancelAnimationFrame(raf);host.__stop=null};
+  show(0);
+}
+
+/* ---------- attack panel ---------- */
+function panel(host,a){
+  const cs=(a.cases||[]).map(c=>'<div class="case'+(c.real?'':' sc')+'"><span class="chip '+(c.real?'t':'a')+'">'+(c.real?'Cas réel':'Scénario type')+(c.when?' · '+c.when:'')+'</span><h4>'+c.title+'</h4><p style="margin:0">'+c.body+'</p>'+(c.lesson?'<div class="lesson"><b>À retenir :</b> '+c.lesson+'</div>':'')+(c.src?'<div class="src">'+c.src+'</div>':'')+'</div>').join('');
+  const tm=(a.terms&&a.terms.length)?'<div class="card"><p class="blk-t">Termes techniques</p><dl class="terms">'+a.terms.map(t=>'<dt>'+t[0]+'</dt><dd>'+t[1]+'</dd>').join('')+'</dl></div>':'';
+  const df=(a.defense&&a.defense.length)?'<div class="card def"><p class="blk-t">Comment s’en protéger</p><ul>'+a.defense.map(d=>'<li>'+d+'</li>').join('')+'</ul></div>':'';
+  const lk=a.link?'<div><button class="btn primary" data-goto="'+a.link+'">Voir la fiche détaillée →</button></div>':'';
+  host.innerHTML='<div class="panel"><div class="phead"><h3>'+a.name+'</h3>'+(a.tag?'<span class="chip">'+a.tag+'</span>':'')+'</div>'
+   +'<div class="card"><p class="blk-t">Définition</p><div>'+a.def+'</div></div>'+tm
+   +(a.flow?'<div><p class="blk-t">Schéma animé</p><div id="fl"></div></div>':'')
+   +lk+(cs?'<div><p class="blk-t">Exemples</p><div style="display:grid;gap:12px">'+cs+'</div></div>':'')+df+'</div>';
+  if(a.flow)flow($('#fl',host),a.flow);
+}
+
+/* ---------- sections: tabs + lazy render ---------- */
+function section(id,items){
+  SECS[id]=items;items.forEach(a=>{a.sec=id;REG.push(a)});
+  const root=$('#'+id);if(!root)return;
+  root.innerHTML='<div class="ptabs" role="tablist"></div><div class="pbody"></div>';
+  const tabs=$('.ptabs',root),body=$('.pbody',root);
+  items.forEach((a,k)=>{const b=document.createElement('button');b.className='tab';b.setAttribute('role','tab');b.textContent=a.short||a.name;b.dataset.k=a.id;b.onclick=()=>pick(a.id,false);tabs.appendChild(b)});
+  let cur=null,rendered=false;
+  function pick(aid,scroll){
+    const a=items.find(x=>x.id===aid)||items[0];cur=a.id;rendered=true;
+    $$('.tab',tabs).forEach(t=>t.setAttribute('aria-selected',t.dataset.k===a.id));
+    panel(body,a);
+    if(scroll)root.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
+  }
+  root.__pick=pick;
+  const first=()=>{if(!rendered)pick(items[0].id,false)};
+  if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){first();io.disconnect()}},{rootMargin:'200px'});io.observe(root)}else first();
+}
+function goto(aid){const a=REG.find(x=>x.id===aid);if(!a)return;const r=$('#'+a.sec);if(r&&r.__pick)r.__pick(aid,true)}
+
+function mkQuiz(Q){
+const q=document.getElementById('quiz');let i=0,sc=0;
+function r(){if(i>=Q.length){q.innerHTML='<h3>Score : '+sc+' / '+Q.length+'</h3><p>'+(sc>=Q.length*.8?'Très bien.':sc>=Q.length*.5?'Correct : relisez les fiches des erreurs.':'Reprenez les schémas animés.')+'</p><button class="btn primary" id="qr">Recommencer</button>';document.getElementById('qr').onclick=()=>{i=0;sc=0;r()};return}
+const x=Q[i];q.innerHTML='<div class="mono" style="color:var(--muted)">Question '+(i+1)+' / '+Q.length+'</div><h3 style="margin:6px 0 12px">'+x[0]+'</h3><div style="display:grid;gap:8px">'+x[1].map((o,k)=>'<button class="btn" data-k="'+k+'" style="text-align:left">'+o+'</button>').join('')+'</div><p id="qf" style="margin:12px 0 0"></p>';
+$$('button[data-k]',q).forEach(b=>b.onclick=()=>{if(q.__d)return;q.__d=1;const k=+b.dataset.k;if(k===x[2])sc++;$$('button[data-k]',q).forEach(c=>{const kk=+c.dataset.k;if(kk===x[2])c.style.borderColor='var(--ok)';else if(kk===k)c.style.borderColor='var(--threat)'});$('#qf').innerHTML=(k===x[2]?'<b>Juste.</b> ':'<b>Pas tout à fait.</b> ')+x[3]+' <button class="btn primary" id="qn">Suivant</button>';$('#qn').onclick=()=>{q.__d=0;i++;r()}})}
+r();}
+function mkTail(extra){
+const m=new Map();REG.forEach(a=>(a.terms||[]).forEach(t=>{if(!m.has(t[0]))m.set(t[0],t[1])}));(extra||[]).forEach(t=>{if(!m.has(t[0]))m.set(t[0],t[1])});
+const rows=[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0],'fr'));
+const gl=document.getElementById('gl');const draw=f=>{gl.innerHTML=rows.filter(r=>(r[0]+' '+r[1]).toLowerCase().includes(f)).map(r=>'<tr><td><b>'+r[0]+'</b></td><td>'+r[1]+'</td></tr>').join('')};
+draw('');document.getElementById('gq').addEventListener('input',e=>draw(e.target.value.toLowerCase()));
+document.addEventListener('click',e=>{const b=e.target.closest('[data-goto]');if(b)goto(b.dataset.goto)});
+const nav=$$('.topbar a');const secs=nav.map(a=>$(a.getAttribute('href')));
+function s(){const h=document.documentElement.scrollHeight-innerHeight;$('#prog').style.width=(h>0?Math.min(100,scrollY/h*100):0)+'%';let c=-1;secs.forEach((x,i)=>{if(x&&x.getBoundingClientRect().top<140)c=i});nav.forEach((a,i)=>a.classList.toggle('on',i===c))}
+addEventListener('scroll',s,{passive:true});s();
+if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.02});$$('.fade').forEach(f=>io.observe(f))}else $$('.fade').forEach(f=>f.classList.add('in'));}
+function mkCheat(id,C){document.getElementById(id).innerHTML=C.map(c=>'<tr><td><code>'+c[0]+'</code></td><td>'+c[1]+'</td></tr>').join('')}
+
+section('s-intro',[
+{id:'what',name:'Qu’est-ce qu’une ACL ?',short:'ACL et filtrage',tag:'8.1',
+ def:`<p>Une <b>ACL</b> (Access Control List) est une suite de commandes IOS qui <b>filtre les paquets</b> d’après les informations de leur en-tête. Chaque ligne est une <b>ACE</b> (Access Control Entry). Le filtrage se fait en couche 3 ou 4.</p><div class="tbl"><table><thead><tr><th>Usage</th><th>Exemple</th></tr></thead><tbody><tr><td>Limiter le trafic</td><td>Bloquer la vidéo pour réduire la charge.</td></tr><tr><td>Contrôler les flux</td><td>Ne laisser passer les mises à jour de routage que depuis une source connue.</td></tr><tr><td>Sécurité de base</td><td>Réserver le réseau RH aux utilisateurs autorisés.</td></tr><tr><td>Filtrer par type</td><td>Autoriser le courrier, refuser Telnet.</td></tr><tr><td>Filtrer les hôtes</td><td>Limiter FTP ou HTTP à certains groupes.</td></tr><tr><td>Prioriser</td><td>Avec la QoS, faire passer la voix en priorité.</td></tr></tbody></table></div>`,
+ terms:[['ACL','Liste de règles permit/deny appliquée à une interface ou une ligne.'],['ACE','Une ligne de l’ACL.'],['Filtrage de paquets','Autoriser ou jeter un paquet selon son en-tête (couches 3-4).'],['Deny implicite','Règle finale invisible qui bloque tout le reste.']],
+ flow:{n:[['pk','Paquet|entrant','a',0,1],['a1','ACE 10','x',2,0],['a2','ACE 20','x',3,1],['a3','ACE 30','x',2,2],['de','deny implicite','a',5,1]],
+  s:[[`Le paquet arrive sur une interface qui a une ACL.`,'','','','pk'],
+   [`Lecture <b>de haut en bas</b> : on compare à l’ACE 10.`,'pk','a1','compare','a1'],
+   [`Pas de correspondance : ACE 20.`,'a1','a2','suivant','a2'],
+   [`Toujours pas : ACE 30.`,'a2','a3','suivant','a3'],
+   [`Aucune ACE ne correspond : le <b>deny implicite</b> le jette. À la première correspondance, on s’arrête.`,'a3','de','jeté','de']]},
+ cases:[{real:true,year:2003,cat:'malware',when:'25 janvier 2003',title:'SQL Slammer : filtrer UDP 1434',body:`Pendant l’épidémie de SQL Slammer, une des mesures recommandées pour contenir le ver était de bloquer le port UDP 1434 aux frontières, par ACL ou pare-feu (voir Module 2).`,lesson:`Une ACL est une réponse rapide pour confiner une menace connue, en attendant le correctif.`}],defense:[]},
+{id:'types',name:'Numérotées, nommées, sens in / out',short:'Types et sens',tag:'8.1',
+ def:`<div class="tbl"><table><thead><tr><th>Type</th><th>Plages</th></tr></thead><tbody><tr><td>Standard numérotée</td><td>1 à 99 et 1300 à 1999</td></tr><tr><td>Étendue numérotée</td><td>100 à 199 et 2000 à 2699</td></tr><tr><td>Nommée (<b>recommandée</b>)</td><td><code>ip access-list standard|extended NOM</code></td></tr></tbody></table></div><ul><li><b>Standard</b> : filtre sur l’adresse <b>source</b> seulement.</li><li><b>Étendue</b> : protocole, source, destination, ports.</li><li><b>ACL entrante (in)</b> : filtre <b>avant</b> le routage. Idéale quand le réseau connecté à cette interface est la seule source à examiner.</li><li><b>ACL sortante (out)</b> : filtre <b>après</b> le routage. Idéale pour appliquer le même filtre à du trafic venant de plusieurs interfaces d’entrée.</li></ul>`,
+ terms:[['Entrante (inbound)','Appliquée aux paquets qui arrivent sur l’interface.'],['Sortante (outbound)','Appliquée aux paquets qui quittent l’interface.']],
+ flow:{n:[['in','Réseau LAN','u',0,1],['ri','Interface G0/0|ACL in','s',2,0],['ro','Routage','x',3,1],['ou','Interface S0/0|ACL out','s',4,2],['ne','Internet','c',5,0]],
+  s:[[`Un paquet arrive du LAN : l’<b>ACL entrante</b> le filtre avant le routage.`,'in','ri','paquet','ri'],
+   [`S’il est permis, le routeur choisit la sortie.`,'ri','ro','routage','ro'],
+   [`L’<b>ACL sortante</b> filtre le paquet après le routage.`,'ro','ou','paquet','ou'],
+   [`Les paquets générés par le routeur lui-même ne sont pas filtrés par une ACL sortante.`,'ou','ne','vers Internet','ok:ne']]},
+ cases:[],defense:[]}
+]);
+
+section('s-wild',[
+{id:'wc',name:'Masque générique (wildcard)',short:'Wildcard',tag:'8.2',
+ def:`<p>Comme le masque de sous-réseau, il sert à comparer les bits d’une adresse, mais <b>à l’envers</b> : <b>0 = doit correspondre, 1 = ignoré</b>.</p><div class="tbl"><table><thead><tr><th>Wildcard</th><th>Dernier octet</th><th>Sens</th></tr></thead><tbody><tr><td>0.0.0.0</td><td>00000000</td><td>Tous les bits doivent correspondre (un hôte)</td></tr><tr><td>0.0.0.15</td><td>00001111</td><td>Ignore les 4 derniers bits (16 adresses)</td></tr><tr><td>0.0.0.63</td><td>00111111</td><td>Ignore les 6 derniers bits (64 adresses)</td></tr><tr><td>0.0.0.255</td><td>11111111</td><td>Ignore tout le dernier octet</td></tr><tr><td>0.0.0.252</td><td>11111100</td><td>Ignore les 6 bits de gauche, compare les 2 derniers</td></tr></tbody></table></div><p><b>Calcul rapide</b> : 255.255.255.255 − masque de sous-réseau. Exemple : 255.255.255.255 − 255.255.255.0 = <code>0.0.0.255</code>. Mots-clés : <code>host x.x.x.x</code> = x.x.x.x 0.0.0.0 ; <code>any</code> = 0.0.0.0 255.255.255.255.</p><div class="panel" style="display:block;padding:12px"><b>Calculateur de wildcard</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><input id="wcm" value="255.255.255.0" aria-label="Masque de sous-réseau" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit" oninput="wcCalc()"><span id="wco" style="align-self:center"></span></div><small>Entrez un masque de sous-réseau : le wildcard s’affiche.</small></div>`,
+ terms:[['Wildcard mask','Masque où 0 = comparer, 1 = ignorer.'],['ANDing','Opération binaire ET utilisée pour comparer adresse et masque.'],['host','Raccourci pour un masque 0.0.0.0.'],['any','Raccourci pour 255.255.255.255 : toute adresse.']],
+ flow:{n:[['sm','Masque|255.255.255.0','x',0,1],['sb','255.255.255.255|− masque','x',2,0],['wc','Wildcard|0.0.0.255','x',4,1],['ac','access-list 10 permit|192.168.3.0 0.0.0.255','s',5,2]],
+  s:[[`On part du masque de sous-réseau du réseau 192.168.3.0 /24.`,'','','','sm'],
+   [`On le soustrait de 255.255.255.255.`,'sm','sb','soustraction','sb'],
+   [`Résultat : le wildcard <code>0.0.0.255</code>.`,'sb','wc','résultat','ok:wc'],
+   [`L’ACE correspondante : <code>access-list 10 permit 192.168.3.0 0.0.0.255</code>.`,'wc','ac','ACE','ok:ac']]},
+ cases:[],defense:[]}
+]);
+
+section('s-conf',[
+{id:'std',name:'ACL standard IPv4',short:'Standard',tag:'8.3',
+ def:`<pre class="cli"><span class="c"># Numérotée</span>
+R1(config)# access-list 10 remark Autoriser le LAN RH
+R1(config)# access-list 10 permit 192.168.3.0 0.0.0.255
+<span class="c"># Nommée</span>
+R1(config)# ip access-list standard NO-ACCESS
+R1(config-std-nacl)# deny host 192.168.11.10
+R1(config-std-nacl)# permit any
+<span class="c"># Application</span>
+R1(config)# interface g0/1
+R1(config-if)# ip access-group NO-ACCESS out
+<span class="c"># Supprimer une ACL numérotée</span>
+R1(config)# no access-list 10</pre><ul><li><code>remark</code> : commentaire (100 caractères max).</li><li><code>log</code> : message au premier paquet correspondant ; à utiliser pour le dépannage.</li><li>Noms : alphanumériques, <b>sensibles à la casse</b>, uniques ; on les met en majuscules.</li><li>Sans masque, le wildcard par défaut est 0.0.0.0 (un hôte).</li></ul>`,
+ terms:[['remark','Commentaire dans l’ACL.'],['log','Journalise la correspondance.']],cases:[],defense:[]},
+{id:'ext',name:'ACL étendue IPv4',short:'Étendue',tag:'8.3',
+ def:`<pre class="cli">access-list 100 permit tcp 192.168.10.0 0.0.0.255 any eq www
+access-list 100 permit tcp 192.168.10.0 0.0.0.255 any eq 443
+<span class="c"># Les deux lignes suivantes sont équivalentes : nom ou numéro de port</span>
+access-list 101 permit tcp any any eq www
+access-list 101 permit tcp any any eq 80
+
+R1(config)# ip access-list extended NO-FTP-ACCESS
+R1(config-ext-nacl)# deny tcp 192.168.11.0 0.0.0.255 192.168.30.0 0.0.0.255 eq ftp
+R1(config-ext-nacl)# permit ip any any</pre><div class="tbl"><table><thead><tr><th>Paramètre</th><th>Rôle</th></tr></thead><tbody><tr><td>protocole</td><td><code>ip</code> (tout), <code>tcp</code> (6), <code>udp</code> (17), <code>icmp</code> (1)</td></tr><tr><td>opérateur</td><td><code>eq</code>, <code>neq</code>, <code>lt</code>, <code>gt</code>, <code>range</code></td></tr><tr><td>port</td><td>Nom ou numéro. SSH (22) et HTTPS (443) n’ont pas de nom : mettre le numéro.</td></tr><tr><td>established</td><td>TCP seulement : première forme de pare-feu à état</td></tr><tr><td>log</td><td>Message à la première correspondance</td></tr></tbody></table></div>`,
+ terms:[['Numéro de protocole','ICMP = 1, TCP = 6, UDP = 17.'],['eq / neq / lt / gt','Égal, différent, inférieur, supérieur.']],
+ flow:{n:[['pc','LAN 192.168.11.0','u',0,1],['r1','R1|NO-FTP-ACCESS','s',2,1],['b','Réseau B|192.168.30.0','v',5,0],['ot','Autre trafic','x',5,2]],
+  s:[[`Le trafic du LAN 192.168.11.0 passe par R1.`,'pc','r1','trafic','r1'],
+   [`FTP vers 192.168.30.0 : la ligne <code>deny tcp ... eq ftp</code> correspond. Jeté.`,'r1','b','ftp','b'],
+   [`Tout autre trafic : <code>permit ip any any</code>.`,'r1','ot','http, ping...','ok:ot'],
+   [`Sans ce dernier <code>permit</code>, le deny implicite bloquerait tout.`,'','','','']]},
+ cases:[],defense:[]},
+{id:'est',name:'Le mot-clé established',short:'established',tag:'8.3',
+ def:`<p><code>established</code> (TCP seulement) permet un filtrage à état de base : le trafic sortant du réseau interne est libre, et seules les <b>réponses</b> sont admises en retour ; une connexion lancée de l’extérieur est refusée.</p><pre class="cli">R1(config)# access-list 120 permit tcp any any established
+R1(config)# interface g0/0/0
+R1(config-if)# ip access-group 120 out
+
+<span class="c"># Deux ACL nommées : SURFING (sortie web) et BROWSING (retour web)</span>
+R1(config)# ip access-list extended SURFING
+R1(config-ext-nacl)# permit tcp 192.168.10.0 0.0.0.255 any eq www
+R1(config-ext-nacl)# permit tcp 192.168.10.0 0.0.0.255 any eq 443
+R1(config)# ip access-list extended BROWSING
+R1(config-ext-nacl)# permit tcp any 192.168.10.0 0.0.0.255 established
+R1(config)# interface g0/0/0
+R1(config-if)# ip access-group SURFING in
+R1(config-if)# ip access-group BROWSING out</pre><p class="note"><b>Limite</b>C’est un contrôle sommaire : il regarde seulement les drapeaux TCP, pas l’état réel de la session. Le pare-feu à état et ZPF (Modules 9 et 10) font mieux.</p>`,
+ terms:[['established','Segment TCP avec le drapeau ACK ou RST : une réponse.'],['Pare-feu à état','Garde une table des sessions pour autoriser le retour.']],
+ flow:{n:[['pc','PC interne','u',0,1],['r1','R1','s',2,1],['we','Serveur web','c',5,1],['at','Attaquant|connexion entrante','a',5,2]],
+  s:[[`Le PC ouvre une session web : SURFING l’autorise à sortir.`,'pc','r1','SYN vers port 443','r1'],
+   [`La requête atteint le serveur.`,'r1','we','requête','we'],
+   [`La réponse (drapeau ACK) revient : BROWSING (<code>established</code>) l’autorise.`,'we','pc','réponse','ok:pc'],
+   [`Une connexion initiée de l’extérieur (SYN seul) ne correspond pas à <code>established</code> : refusée.`,'at','r1','SYN entrant','at']]},
+ cases:[],defense:[]}
+]);
+
+section('s-mod',[
+{id:'seq',name:'Modifier une ACL',short:'Modifier',tag:'8.4',
+ def:`<p>Deux méthodes :</p><ul><li><b>Éditeur de texte</b> : copier l’ACL, la corriger, <b>supprimer l’ancienne ACL</b> sur le routeur (sinon on ne fait qu’ajouter des lignes), puis recoller.</li><li><b>Numéros de séquence</b> : ils sont attribués automatiquement (10, 20, 30...) et visibles avec <code>show access-lists</code> (pas avec <code>show running-config</code>).</li></ul><pre class="cli">R1# show access-lists
+R1(config)# ip access-list standard NO-ACCESS
+R1(config-std-nacl)# no 10                          <span class="c"># supprimer la ligne 10</span>
+R1(config-std-nacl)# 10 deny host 192.168.11.10     <span class="c"># la remettre corrigée</span>
+R1(config-std-nacl)# 15 permit host 192.168.11.20   <span class="c"># insérer entre 10 et 20</span></pre><p>On <b>ne peut pas écraser</b> une ligne avec le même numéro : on la supprime d’abord avec <code>no N</code>. Les nouvelles lignes sans numéro vont <b>en bas</b>.</p>`,
+ terms:[['Numéro de séquence','Position d’une ACE dans l’ACL.']],
+ flow:{n:[['a','10 deny|host .10','x',0,1],['b','20 permit|any','x',2,0],['c','ACE erronée','a',3,2],['d','Corrigée','x',5,1]],
+  s:[[`Une ACE est fausse (ligne 10).`,'','','','c'],
+   [`On la supprime : <code>no 10</code>. On ne peut pas la réécrire par-dessus.`,'a','c','no 10','a'],
+   [`On la recrée avec le même numéro : <code>10 deny host 192.168.11.10</code>.`,'c','d','10 deny ...','ok:d'],
+   [`Pour insérer une règle entre 10 et 20, on utilise le numéro 15.`,'d','b','15 permit ...','ok:b ok:a']]},
+ cases:[],defense:[]}
+]);
+
+section('s-impl',[
+{id:'rules',name:'Règles de configuration',short:'Règles',tag:'8.5',
+ def:`<ul><li>Créer l’ACL globalement, puis l’appliquer.</li><li>Dernière ligne : deny implicite ou <code>deny ip any any</code>.</li><li>Lecture <b>de haut en bas</b>, arrêt à la première correspondance.</li><li>Les règles les <b>plus spécifiques en haut</b>.</li><li><b>Une ACL par interface, par protocole, par sens.</b></li><li>Les nouvelles lignes s’ajoutent en bas.</li><li>Les paquets générés par le routeur ne sont pas filtrés par une ACL sortante.</li><li><b>Standard : près de la destination. Étendue : près de la source.</b></li></ul><p>Pour l’administration à distance, on applique l’ACL aux lignes vty :</p><pre class="cli">R1(config)# ip access-list standard ADMIN-HOST
+R1(config-std-nacl)# permit host 192.168.10.10
+R1(config)# line vty 0 4
+R1(config-line)# access-class ADMIN-HOST in</pre><p><code>access-group</code> s’applique aux <b>interfaces</b>, <code>access-class</code> aux <b>lignes vty</b>.</p>`,
+ terms:[['access-group','Applique l’ACL à une interface.'],['access-class','Applique l’ACL à des lignes vty.']],cases:[],defense:[]},
+{id:'place',name:'Où placer les ACL ?',short:'Placement',tag:'8.5',
+ def:`<p><b>Standard</b> (source seulement) : près de la <b>destination</b>, sinon elle bloquerait aussi du trafic légitime de cette source vers d’autres destinations.</p><p><b>Étendue</b> (source, destination, port) : près de la <b>source</b>, pour ne pas faire traverser le réseau à du trafic qui sera de toute façon refusé.</p><p>Facteurs : l’organisation ne peut placer des ACL que sur les équipements qu’elle contrôle ; la bande passante ; la facilité de configuration (une ACL au destinataire est plus simple, mais le trafic indésirable a déjà consommé la bande passante).</p>`,
+ terms:[['Près de la source','Au premier routeur du chemin.'],['Près de la destination','Au dernier routeur avant la cible.']],
+ flow:{n:[['a','LAN 192.168.10.0','u',0,1],['r1','R1','s',2,1],['r2','R2','s',3,2],['r3','R3','s',4,0],['b','LAN 192.168.30.0','v',5,1]],
+  s:[[`Objectif : empêcher 192.168.10.0 d’atteindre 192.168.30.0.`,'','','','a b'],
+   [`<b>Étendue</b> : sur R1, près de la source, elle bloque le trafic dès le départ, sans l’envoyer plus loin.`,'a','r1','refusé ici','ok:r1'],
+   [`<b>Standard</b> : sur R3, près de la destination. Elle filtre sur la source : si elle était sur R1, elle bloquerait aussi 192.168.10.0 vers les autres réseaux.`,'r2','r3','filtre source','ok:r3'],
+   [`Le trafic aura donc traversé R1 et R2 avant d’être jeté : moins efficace.`,'r3','b','bloqué','b']]},
+ cases:[],defense:[]}
+]);
+
+section('s-mit',[
+{id:'spoof',name:'Contrer l’usurpation d’adresse',short:'Usurpation',tag:'8.6',
+ def:`<p>L’interface connectée à Internet ne devrait <b>jamais</b> recevoir de paquets dont la source est : adresse tout-zéros, adresse de diffusion, <b>127.0.0.0/8</b>, <b>169.254.0.0/16</b> (APIPA), adresses privées <b>RFC 1918</b>, multicast <b>224.0.0.0/4</b>.</p><pre class="cli">R1(config)# ip access-list extended ANTI-SPOOF
+R1(config-ext-nacl)# deny ip 10.0.0.0 0.255.255.255 any
+R1(config-ext-nacl)# deny ip 172.16.0.0 0.15.255.255 any
+R1(config-ext-nacl)# deny ip 192.168.0.0 0.0.255.255 any
+R1(config-ext-nacl)# deny ip 127.0.0.0 0.255.255.255 any
+R1(config-ext-nacl)# deny ip 169.254.0.0 0.0.255.255 any
+R1(config-ext-nacl)# deny ip 224.0.0.0 15.255.255.255 any
+R1(config-ext-nacl)# deny ip host 0.0.0.0 any
+R1(config-ext-nacl)# permit ip any any
+R1(config)# interface s0/0/0
+R1(config-if)# ip access-group ANTI-SPOOF in</pre>`,
+ terms:[['RFC 1918','Plages privées : 10/8, 172.16/12, 192.168/16.'],['APIPA','Adresse 169.254.x.x auto-attribuée sans DHCP.']],
+ flow:{n:[['at','Attaquant|source = 192.168.1.5','a',0,1],['r1','R1 S0/0/0|ANTI-SPOOF','s',3,1],['lan','LAN interne','v',5,1]],
+  s:[[`Un attaquant d’Internet falsifie une adresse source interne (192.168.1.5).`,'at','r1','source usurpée','at'],
+   [`L’ACL entrante de l’interface Internet refuse toute source privée.`,'r1','at','deny RFC 1918','ok:r1'],
+   [`Le LAN n’a jamais vu le paquet.`,'','','','ok:lan']]},
+ cases:[{real:true,year:2018,cat:'dos',when:'28 février 2018',title:'GitHub : l’usurpation derrière l’amplification',body:`L’attaque par amplification memcached contre GitHub reposait sur des requêtes à IP source usurpée (voir Module 2). Le filtrage anti-usurpation en bordure de réseau réduit ce type d’attaque.`,lesson:`Filtrer les sources impossibles ferme la porte à l’usurpation la plus simple.`}],defense:[]},
+{id:'svc',name:'Autoriser seulement les services nécessaires',short:'Services',tag:'8.6',
+ def:`<p>Stratégie efficace : <b>autoriser explicitement</b> seulement certains types de trafic. DNS, SMTP et FTP sont souvent nécessaires ; SSH, syslog, SNMP pour le routeur lui-même.</p><pre class="cli">R1(config)# ip access-list extended INBOUND
+R1(config-ext-nacl)# permit udp any host 192.168.1.2 eq 53
+R1(config-ext-nacl)# permit tcp any host 192.168.1.3 eq 25
+R1(config-ext-nacl)# permit tcp any host 192.168.1.4 eq 21
+R1(config-ext-nacl)# permit tcp host 10.1.1.5 host 192.168.1.1 eq 22
+R1(config-ext-nacl)# permit udp host 10.1.1.6 host 192.168.1.1 eq 514
+R1(config-ext-nacl)# deny ip any any log
+R1(config)# interface s0/0/0
+R1(config-if)# ip access-group INBOUND in</pre>`,
+ terms:[['SMTP','Envoi de courrier (port 25).'],['Syslog','Journalisation (UDP 514).']],cases:[],defense:[]},
+{id:'icmp',name:'Contrer les attaques ICMP',short:'ICMP',tag:'8.6',
+ def:`<p>Bloquer en <b>entrée</b> : <code>echo</code> et <code>redirect</code>. Autoriser en entrée (fonctionnement normal) : <b>echo-reply</b>, <b>source-quench</b>, <b>unreachable</b>.</p><p>Autoriser en <b>sortie</b> : <b>echo</b>, <b>parameter-problem</b>, <b>packet-too-big</b> (découverte du MTU), <b>source-quench</b>. En règle générale, bloquer tous les autres types ICMP en sortie.</p><pre class="cli">R1(config)# ip access-list extended ICMP-IN
+R1(config-ext-nacl)# permit icmp any any echo-reply
+R1(config-ext-nacl)# permit icmp any any source-quench
+R1(config-ext-nacl)# permit icmp any any unreachable
+R1(config-ext-nacl)# deny icmp any any
+R1(config-ext-nacl)# permit ip any any</pre>`,
+ terms:[['echo / echo-reply','Requête et réponse de ping.'],['redirect','Message qui indique une meilleure route : falsifiable.'],['packet-too-big','Nécessaire à la découverte du MTU.']],
+ flow:{n:[['ex','Extérieur','c',0,1],['r1','R1|ICMP-IN','s',3,1],['lan','LAN','v',5,1]],
+  s:[[`Un ping (echo) venant de l’extérieur arrive : refusé.`,'ex','r1','echo','ex'],
+   [`Un utilisateur interne a fait un ping : l’echo-reply qui revient est permis.`,'ex','r1','echo-reply','ok:r1'],
+   [`La réponse atteint le LAN : le ping sortant fonctionne, la découverte depuis l’extérieur est bloquée.`,'r1','lan','echo-reply','ok:lan']]},
+ cases:[],defense:[]},
+{id:'snmp',name:'Contrer les attaques SNMP',short:'SNMP',tag:'8.6',
+ def:`<p>Filtrer par ACL les paquets SNMP des systèmes non autorisés aide, mais la mesure la plus efficace est de <b>désactiver le serveur SNMP</b> sur les équipements qui n’en ont pas besoin :</p><pre class="cli">R1(config)# no snmp-server</pre>`,
+ terms:[['SNMP','Protocole de supervision.']],cases:[],defense:[]}
+]);
+
+section('s-v6',[
+{id:'v6',name:'ACL IPv6',short:'ACL IPv6',tag:'8.7',
+ def:`<p>Pourquoi ? IPv4 et IPv6 <b>coexistent</b> (double pile) : des attaquants exploitent IPv4 pour atteindre IPv6, avec des hôtes en double pile, de faux messages NDP et des tunnels. On filtre en bordure avec des ACL IPv6.</p><ul><li>Pas d’ACL standard en IPv6 : <b>toutes sont étendues et nommées</b>.</li><li>Application : <code>ipv6 traffic-filter NOM in|out</code>.</li><li>À la fin : un <b>deny ipv6 any any</b> implicite, précédé de <b>deux permit implicites</b> pour la découverte de voisins (<code>nd-na</code> et <code>nd-ns</code>).</li></ul><pre class="cli">R1(config)# ipv6 access-list IPV6-FILTER
+R1(config-ipv6-acl)# permit ipv6 2001:DB8:1:1::/64 any
+R1(config-ipv6-acl)# permit icmp any any nd-na
+R1(config-ipv6-acl)# permit icmp any any nd-ns
+R1(config-ipv6-acl)# deny ipv6 any any
+R1(config)# interface g0/0
+R1(config-if)# ipv6 traffic-filter IPV6-FILTER in</pre><p class="note warn"><b>Piège</b>Si vous mettez <code>deny ipv6 any any</code> sans permettre <code>nd-na</code> et <code>nd-ns</code>, la découverte de voisins est désactivée et IPv6 cesse de fonctionner sur le lien.</p>`,
+ terms:[['NDP','Neighbor Discovery Protocol : équivalent d’ARP en IPv6.'],['nd-na / nd-ns','Neighbor Advertisement / Solicitation.'],['Double pile','Hôte qui utilise IPv4 et IPv6.'],['ipv6 traffic-filter','Applique une ACL IPv6 à une interface.']],
+ flow:{n:[['h','Hôte 2001:DB8:1:1::10','u',0,1],['r1','R1 G0/0|IPV6-FILTER','s',3,1],['sv','Réseau|extérieur','c',5,1]],
+  s:[[`L’hôte du préfixe 2001:DB8:1:1::/64 envoie du trafic : permis par la première règle.`,'h','r1','ipv6','ok:r1'],
+   [`Des messages de découverte de voisins (nd-ns, nd-na) sont permis : IPv6 fonctionne sur le lien.`,'r1','h','nd-na','ok:h'],
+   [`Un hôte d’un autre préfixe : refusé par le <code>deny ipv6 any any</code>.`,'sv','r1','autre préfixe','sv']]},
+ cases:[],defense:[]}
+]);
+
+window.wcCalc=function(){const v=document.getElementById('wcm').value.trim().split('.').map(Number);const o=document.getElementById('wco');if(v.length!==4||v.some(x=>isNaN(x)||x<0||x>255)){o.textContent='Masque invalide';return}o.innerHTML='Wildcard : <code>'+v.map(x=>255-x).join('.')+'</code>'};
+mkCheat('ch',[['access-list 10 permit 192.168.3.0 0.0.0.255','ACL standard numérotée'],['ip access-list standard|extended NOM','ACL nommée'],['permit|deny tcp src wc dst wc eq 443','ACE étendue'],['permit tcp any any established','Réponses TCP seulement'],['remark texte','Commentaire'],['ip access-group NOM in|out','Applique à une interface'],['access-class NOM in','Applique aux lignes vty'],['show access-lists','ACL et compteurs de correspondances'],['show ip interface g0/0','ACL appliquée à l’interface'],['no 10','Supprime la ligne 10 (mode ACL)'],['ipv6 access-list NOM','ACL IPv6'],['ipv6 traffic-filter NOM in','Applique l’ACL IPv6']]);
+mkQuiz([
+['Quelle plage correspond à une ACL étendue numérotée ?',['1-99','100-199','200-299','1-1000'],1,'Étendues : 100-199 et 2000-2699.'],
+['Une ACL standard filtre sur :',['La source','La destination','Le port','Le protocole'],0,'Adresse source seulement.'],
+['Le wildcard d’un /24 est :',['255.255.255.0','0.0.0.255','0.0.0.0','255.0.0.0'],1,'255.255.255.255 − 255.255.255.0.'],
+['Dans un wildcard, un bit à 0 signifie :',['Ignorer','Comparer','Refuser','Permettre'],1,'0 = doit correspondre.'],
+['« host 10.1.1.1 » équivaut à :',['10.1.1.1 255.255.255.255','10.1.1.1 0.0.0.0','any','10.1.1.1 0.0.0.255'],1,'Masque 0.0.0.0.'],
+['Que fait la dernière règle invisible d’une ACL IPv4 ?',['permit any','deny any','Rien','Journalise'],1,'Deny implicite.'],
+['Où placer une ACL étendue ?',['Près de la destination','Près de la source','Sur chaque routeur','Seulement sur le cœur'],1,'Près de la source.'],
+['Où placer une ACL standard ?',['Près de la source','Près de la destination','Peu importe','Sur le switch'],1,'Près de la destination.'],
+['Quelle commande applique une ACL à une ligne vty ?',['ip access-group','access-class','traffic-filter','ip filter'],1,'access-class.'],
+['Comment modifier une ACE par numéro ?',['La réécrire avec le même numéro','no N puis la recréer','reload','Impossible'],1,'On supprime puis on recrée.'],
+['Que filtre « established » ?',['UDP','Les segments TCP de réponse (ACK/RST)','ICMP','Tout'],1,'Réponses TCP.'],
+['Les paquets générés par le routeur sont-ils filtrés par une ACL sortante ?',['Oui','Non','Seulement ICMP','Seulement TCP'],1,'Non.'],
+['Quelles adresses sources bloquer sur l’interface Internet ?',['RFC 1918, 127/8, 169.254/16, multicast','Seulement 10/8','Aucune','Toutes les publiques'],0,'Sources impossibles : anti-usurpation.'],
+['Mesure la plus efficace contre SNMP non voulu :',['ACL','no snmp-server','ping','reload'],1,'Désactiver le service inutile.'],
+['Une ACL IPv6 se déclare avec :',['access-list 100','ipv6 access-list NOM','ip access-list ipv6','ipv6 acl'],1,'Nommée uniquement.'],
+['Quels permit implicites en ACL IPv6 ?',['nd-na et nd-ns','echo et reply','http et https','Aucun'],0,'Découverte de voisins.'],
+['Ordre de lecture des ACE :',['Bas en haut','Haut en bas, arrêt à la première correspondance','Toutes évaluées','Aléatoire'],1,'Top-down.'],
+['Combien d’ACL par interface, protocole et sens ?',['Une','Deux','Illimité','Quatre'],0,'Une seule.']]);
+mkTail([['ACL','Liste de règles de filtrage.'],['ACE','Une ligne d’ACL.'],['Wildcard','Masque inversé 0 = comparer.'],['Deny implicite','Règle finale bloquant le reste.'],['established','TCP : réponses seulement.'],['access-class','ACL sur lignes vty.']]);
+
+
+</script>
+
+</body></html>
